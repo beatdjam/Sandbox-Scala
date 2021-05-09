@@ -1,24 +1,6 @@
-import scala.annotation.tailrec
+package example
 
-// Appトレイトでエントリポイントを設定したもの
-object Hello extends App {
-  println("Hello, World!")
-}
-
-// mainメソッドでエントリポイントを設定したもの
-object ScalaTour {
-  def main(args: Array[String]): Unit = {
-    val message = "Hello World"
-    println(message)
-
-    val n = 15
-    fizzBuzz(n)
-    fizzBuzzMatch(n)
-    fizzBuzzRecursion(n)
-
-    println(gcd(12, 30))
-  }
-
+object FizzBuzz {
   def fizzBuzz(n: Int): Unit = {
     for {i <- 1 to n} {
       if (i % 15 == 0) println("FizzBuzz")
@@ -48,10 +30,6 @@ object ScalaTour {
     }
 
     if (i < n) fizzBuzzRecursion(n, i + 1)
-  }
 
-  @tailrec
-  def gcd(a: Int, b: Int): Int = {
-    if (a % b == 0) b else gcd(b, a % b)
   }
 }
