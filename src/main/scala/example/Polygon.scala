@@ -1,7 +1,7 @@
 package example
 
 abstract class Polygon(edges: List[Int]) {
-  val n = edges.length // n角形
+  private val n = edges.length // n角形
   val area: Double //面積
 }
 
@@ -13,11 +13,11 @@ object Polygon {
 }
 
 class Triangle(edges: List[Int]) extends Polygon(edges) {
-  val a = edges.head
-  val b = edges(1)
-  val c = edges(2)
+  private val a = edges.head
+  private val b = edges(1)
+  private val c = edges(2)
 
-  val area = {
+  val area: Double = {
     // ハロンの公式
     val s = (a + b + c) / 2.0
     math.sqrt(s * (s - a) * (s - b) * (s - c))
