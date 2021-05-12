@@ -39,6 +39,13 @@ object ScalaTour {
     triangle2.printColor()
     println(triangle2.alpha)
 
+    // 利用側であとからtraitをmixinすることもできる
+    val triangle3 = new Triangle(edges) with Blue with Frosted
+    println(triangle3.n)
+    println(triangle3.area)
+    triangle3.printColor()
+    println(triangle3.alpha)
+
     // Sealed ClassでEnumを表現した例
     val cat = Cat
     Animal.checkAnimal(cat)
@@ -61,6 +68,14 @@ object ScalaTour {
     val foo2 = foo.copy()
     println(s"${foo.i}, ${foo.randomValue}")
     println(s"${foo2.i}, ${foo2.randomValue}")
+
+    // タプル
+    val tuple21 = (1, "Hello")
+    println(tuple21._1)
+    println(tuple21._2)
+    val (one, two) = tuple21
+    println(one)
+    println(two)
   }
 
   @tailrec
