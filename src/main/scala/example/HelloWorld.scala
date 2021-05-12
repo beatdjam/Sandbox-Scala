@@ -18,23 +18,32 @@ object ScalaTour {
 
     //     FizzBuzz
     val n = 15
-    fizzBuzz(n)
-    fizzBuzzMatch(n)
-    fizzBuzzRecursion(n)
+    fizzBuzz(n) // 愚直に書いたもの
+    fizzBuzzMatch(n) // match式で書いたもの
+    fizzBuzzRecursion(n) // 再帰で書いたもの
 
-    // tailrec
+    // tailrecの最適化確認
     println(gcd(12, 30))
 
     // example.Polygon
     val edges = List(3, 4, 5)
     //      val triangle = new example.Triangle(edges)
     val triangle = example.Polygon.fromEdges(edges)
+    println(triangle.n)
     println(triangle.area)
 
-    // Animal
+    // traitを利用した例
+    val triangle2 = new BlueFrostedTriangle(edges)
+    println(triangle2.n)
+    println(triangle2.area)
+    triangle2.printColor()
+    println(triangle2.alpha)
+
+    // Sealed ClassでEnumを表現した例
     val cat = Cat
     Animal.checkAnimal(cat)
 
+    // Applyの振る舞い
     val sample = new ApplySample
     sample()
     ApplySample.apply()
