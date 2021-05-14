@@ -79,6 +79,18 @@ object ScalaTour {
     val (one, two) = tuple21
     println(one)
     println(two)
+
+    val intBox = new Box[Int](10)
+    println(intBox.element)
+    val animalBox = new Box[Animal](cat)
+    println(animalBox.element)
+    animalBox.set(Dog)
+    println(animalBox.element)
+
+    val animalBox2 = new AnimalBox[Animal](Dog)
+    println(animalBox2.element)
+    val animalBox3 = new CatBox[Cat.type](cat)
+    println(animalBox3.element)
   }
 
   // 末尾最適化で値を返す場合のサンプル
@@ -102,4 +114,32 @@ object ApplySample {
 // コンストラクタ引数は引き継がれるが、内部の値はcopy時にcopy先のinitializeで再生成される
 case class Foo(i: Int) {
   val randomValue: Int = new Random().nextInt()
+}
+
+// パラメータ多相のサンプル
+class Box[T](var element: T) {
+  def get(): T = element
+
+  def set(newElement: T): Unit = {
+    element = newElement
+  }
+}
+
+// TをAnimalの派生クラスに制限した場合
+class AnimalBox[T <: Animal](var element: T) {
+  def get(): T = element
+
+  def set(newElement: T): Unit = {
+    element = newElement
+  }
+}
+
+// Tを自身か親クラスに制限する場合
+// これだと例がよくないかも…
+class CatBox[T >: Cat.type](var element: T) {
+  def get(): T = element
+
+  def set(newElement: T): Unit = {
+    element = newElement
+  }
 }
