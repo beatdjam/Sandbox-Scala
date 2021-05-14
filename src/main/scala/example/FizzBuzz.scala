@@ -1,6 +1,11 @@
 package example
 
+import scala.annotation.tailrec
+
+// FizzBuzzで様々な実装をしたサンプル
+
 object FizzBuzz {
+  // for式で単純に作る場合
   def fizzBuzz(n: Int): Unit = {
     for {i <- 1 to n} {
       if (i % 15 == 0) println("FizzBuzz")
@@ -10,6 +15,7 @@ object FizzBuzz {
     }
   }
 
+  // ifをmatchに置き換えた場合
   def fizzBuzzMatch(n: Int): Unit = {
     for {i <- 1 to n} {
       i match {
@@ -21,6 +27,8 @@ object FizzBuzz {
     }
   }
 
+  // 再帰で実行した場合
+  @tailrec
   def fizzBuzzRecursion(n: Int, i: Int = 1): Unit = {
     i match {
       case x if x % 15 == 0 => println("FizzBuzz")

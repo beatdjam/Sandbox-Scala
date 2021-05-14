@@ -3,6 +3,7 @@ package example
 import example.FizzBuzz.{fizzBuzz, fizzBuzzMatch, fizzBuzzRecursion}
 
 import scala.annotation.tailrec
+import scala.util.Random
 
 // Appトレイトでエントリポイントを設定したもの
 object Hello extends App {
@@ -70,6 +71,8 @@ object ScalaTour {
     println(s"${foo2.i}, ${foo2.randomValue}")
 
     // タプル
+    // _1、_2は専用のアクセサがある
+    // 分解宣言ができる
     val tuple21 = (1, "Hello")
     println(tuple21._1)
     println(tuple21._2)
@@ -78,8 +81,25 @@ object ScalaTour {
     println(two)
   }
 
+  // 末尾最適化で値を返す場合のサンプル
+  // 最大公約数の取得
   @tailrec
   def gcd(a: Int, b: Int): Int = {
     if (a % b == 0) b else gcd(b, a % b)
   }
+}
+
+// applyを定義した場合のインスタンスに紐づくメソッドとクラスに紐づくメソッドのサンプル
+class ApplySample {
+  def apply(): Unit = println("インスタンスメソッドのapply")
+}
+
+object ApplySample {
+  def apply(): Unit = println("クラスメソッドのapply")
+}
+
+// case classのサンプル
+// コンストラクタ引数は引き継がれるが、内部の値はcopy時にcopy先のinitializeで再生成される
+case class Foo(i: Int) {
+  val randomValue: Int = new Random().nextInt()
 }

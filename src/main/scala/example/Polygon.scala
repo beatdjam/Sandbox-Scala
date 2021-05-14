@@ -1,5 +1,7 @@
 package example
 
+// 抽象クラス、traitの振る舞いのサンプル
+
 abstract class Polygon(edges: List[Int]) {
   val n: Int = edges.length // n角形
   val area: Double //面積
