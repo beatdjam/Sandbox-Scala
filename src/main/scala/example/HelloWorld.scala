@@ -94,6 +94,18 @@ object ScalaTour {
     println(animalBox2.element)
     val animalBox3 = new CatBox[Cat.type](cat)
     println(animalBox3.element)
+
+    // Nil.::(1).::(2).::(3) と等価
+    val list = 1 :: 2 :: 3 :: Nil
+    println(list) // => List(1, 2, 3)
+    println(list.head)
+    println(list.tail)
+    println(list.tail.head)
+    println(list.tail.tail)
+
+    val list2 = 0 :: list
+    println(list2) // => List(0, 1, 2, 3)
+    println(threeTimesThree((0 to 10).toList))
   }
 
 
@@ -102,6 +114,16 @@ object ScalaTour {
   @tailrec
   def gcd(a: Int, b: Int): Int = {
     if (a % b == 0) b else gcd(b, a % b)
+  }
+
+  // Listの要素一つずつにアクセスし、3の倍数だけ3倍したリストを生成する
+  def threeTimesThree(list: List[Int]): List[Int] = list match {
+    // tailが存在してheadが3で割り切れる場合にheadを3倍したものを先頭要素にして残りの要素を再帰で取得
+    case head :: tail if head % 3 == 0 => (head * 3) :: threeTimesThree(tail)
+    // tailが存在する場合にheadを先頭要素にして残りの要素を再帰で取得
+    case head :: tail => head :: threeTimesThree(tail)
+    // tailがNilで渡された場合はNilを返す
+    case Nil => Nil
   }
 }
 
