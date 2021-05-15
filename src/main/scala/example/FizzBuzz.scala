@@ -36,8 +36,14 @@ object FizzBuzz {
       case x if x % 5 == 0 => println("Buzz")
       case x => println(x)
     }
-
     if (i < n) fizzBuzzRecursion(n, i + 1)
+  }
 
+  // mapで実装した場合
+  def toFizzBuzz(numbers: List[Int]): List[String] = numbers.map {
+    case x if x % 15 == 0 => "FizzBuzz"
+    case x if x % 3 == 0 => "Fizz"
+    case x if x % 5 == 0 => "Buzz"
+    case x => x.toString
   }
 }

@@ -1,6 +1,6 @@
 package example
 
-import example.FizzBuzz.{fizzBuzz, fizzBuzzMatch, fizzBuzzRecursion}
+import example.FizzBuzz.{fizzBuzz, fizzBuzzMatch, fizzBuzzRecursion, toFizzBuzz}
 
 import scala.annotation.tailrec
 import scala.util.Random
@@ -22,6 +22,9 @@ object ScalaTour {
     fizzBuzz(n) // 愚直に書いたもの
     fizzBuzzMatch(n) // match式で書いたもの
     fizzBuzzRecursion(n) // 再帰で書いたもの
+
+    val fizzBuzzList = toFizzBuzz((1 to 15).toList)
+    fizzBuzzList.foreach(x => println(x))
 
     // tailrecの最適化確認
     println(gcd(12, 30))
@@ -92,6 +95,7 @@ object ScalaTour {
     val animalBox3 = new CatBox[Cat.type](cat)
     println(animalBox3.element)
   }
+
 
   // 末尾最適化で値を返す場合のサンプル
   // 最大公約数の取得
