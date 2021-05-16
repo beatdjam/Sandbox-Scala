@@ -8,9 +8,9 @@ abstract class Polygon(edges: List[Int]) {
 }
 
 object Polygon {
-  def fromEdges(edges: List[Int]): Polygon = edges.length match {
-    case 3 => new Triangle(edges)
-    case x => ???
+  def fromEdges(edges: List[Int]): Option[Polygon] = edges.length match {
+    case 3 => Some(new Triangle(edges))
+    case _ => None
   }
 }
 

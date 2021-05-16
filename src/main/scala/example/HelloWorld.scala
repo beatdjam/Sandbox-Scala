@@ -32,9 +32,13 @@ object ScalaTour {
     // example.Polygon
     val edges = List(3, 4, 5)
     //      val triangle = new example.Triangle(edges)
-    val triangle = example.Polygon.fromEdges(edges)
-    println(triangle.n)
-    println(triangle.area)
+    val polygon = example.Polygon.fromEdges(edges)
+    polygon match {
+      case Some(triangle) =>
+        println(triangle.n)
+        println(triangle.area)
+      case None => println("未実装の図形です")
+    }
 
     // traitを利用した例
     val triangle2 = new BlueFrostedTriangle(edges)
