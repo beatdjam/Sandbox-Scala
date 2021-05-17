@@ -48,11 +48,28 @@ object ScalaTour {
     println(triangle2.alpha)
 
     // 利用側であとからtraitをmixinすることもできる
-    val triangle3 = new Triangle(edges) with Blue with Frosted
-    println(triangle3.n)
-    println(triangle3.area)
-    triangle3.printColor()
-    println(triangle3.alpha)
+    //    val triangle3 = new Triangle(edges) with Blue with Frosted
+    //    println(triangle3.n)
+    //    println(triangle3.area)
+    //    triangle3.printColor()
+    //    println(triangle3.alpha)
+    val polygon2 = Polygon.fromEdges(edges)
+    println(polygon2)
+    polygon2 match {
+      case Some(polygon) => println(polygon.area)
+      case None => println("不正な値です")
+    }
+    val invalidPolygon = Polygon.fromEdges(List(3, 4, 100))
+    invalidPolygon match {
+      case Some(polygon) => println(polygon.area)
+      case None => println("不正な値です")
+    }
+
+    val invalidPolygon2 = Polygon.fromEdges(List(3, 4))
+    invalidPolygon2 match {
+      case Some(polygon) => println(polygon.area)
+      case None => println("不正な値です")
+    }
 
     // Sealed ClassでEnumを表現した例
     val cat = Cat

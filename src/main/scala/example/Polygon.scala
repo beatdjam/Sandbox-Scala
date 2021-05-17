@@ -9,13 +9,13 @@ abstract class Polygon(edges: List[Int]) {
 
 object Polygon {
   def fromEdges(edges: List[Int]): Option[Polygon] = edges.length match {
-    case 3 => Some(new Triangle(edges))
+    case 3 => Triangle.fromEdges(edges)
     case _ => None
   }
 }
 
 
-class Triangle(edges: List[Int]) extends Polygon(edges) {
+class Triangle private(edges: List[Int]) extends Polygon(edges) {
   private val a = edges.head
   private val b = edges(1)
   private val c = edges(2)
@@ -25,6 +25,15 @@ class Triangle(edges: List[Int]) extends Polygon(edges) {
     val s = (a + b + c) / 2.0
     math.sqrt(s * (s - a) * (s - b) * (s - c))
   }
+}
+
+object Triangle {
+  def fromEdges(edges: List[Int]): Option[Triangle] =
+    if (edges.length == 3
+      && edges.head + edges(1) > edges(2)
+      && edges(1) + edges(2) > edges.head
+      && edges(2) + edges.head > edges(1)
+    ) Some(new Triangle(edges)) else None
 }
 
 trait Color {
