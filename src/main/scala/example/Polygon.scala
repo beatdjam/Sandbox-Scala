@@ -8,9 +8,9 @@ abstract class Polygon(edges: List[Int]) {
 }
 
 object Polygon {
-  def fromEdges(edges: List[Int]): Option[Polygon] = edges.length match {
+  def fromEdges(edges: List[Int]): Either[String, Polygon] = edges.length match {
     case 3 => Triangle.fromEdges(edges)
-    case _ => None
+    case x => Left(s"${x}個の辺からなる図形は未実装です")
   }
 }
 
@@ -28,12 +28,14 @@ class Triangle private(edges: List[Int]) extends Polygon(edges) {
 }
 
 object Triangle {
-  def fromEdges(edges: List[Int]): Option[Triangle] =
-    if (edges.length == 3
-      && edges.head + edges(1) > edges(2)
+  def fromEdges(edges: List[Int]): Either[String, Polygon] = {
+    if (edges.length != 3) Left(s"${edges.length}個の辺で三角形は生成出来ません")
+    else if (edges.head + edges(1) > edges(2)
       && edges(1) + edges(2) > edges.head
       && edges(2) + edges.head > edges(1)
-    ) Some(new Triangle(edges)) else None
+    ) Right(new Triangle(edges))
+    else Left("三角形が成立しない辺の組み合わせです")
+  }
 }
 
 trait Color {

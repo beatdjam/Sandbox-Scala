@@ -34,10 +34,10 @@ object ScalaTour {
     //      val triangle = new example.Triangle(edges)
     val polygon = example.Polygon.fromEdges(edges)
     polygon match {
-      case Some(triangle) =>
+      case Right(triangle) =>
         println(triangle.n)
         println(triangle.area)
-      case None => println("未実装の図形です")
+      case Left(err) => println(err)
     }
 
     // traitを利用した例
@@ -56,19 +56,25 @@ object ScalaTour {
     val polygon2 = Polygon.fromEdges(edges)
     println(polygon2)
     polygon2 match {
-      case Some(polygon) => println(polygon.area)
-      case None => println("不正な値です")
+      case Right(triangle) =>
+        println(triangle.n)
+        println(triangle.area)
+      case Left(err) => println(err)
     }
     val invalidPolygon = Polygon.fromEdges(List(3, 4, 100))
     invalidPolygon match {
-      case Some(polygon) => println(polygon.area)
-      case None => println("不正な値です")
+      case Right(triangle) =>
+        println(triangle.n)
+        println(triangle.area)
+      case Left(err) => println(err)
     }
 
     val invalidPolygon2 = Polygon.fromEdges(List(3, 4))
     invalidPolygon2 match {
-      case Some(polygon) => println(polygon.area)
-      case None => println("不正な値です")
+      case Right(triangle) =>
+        println(triangle.n)
+        println(triangle.area)
+      case Left(err) => println(err)
     }
 
     // Sealed ClassでEnumを表現した例
