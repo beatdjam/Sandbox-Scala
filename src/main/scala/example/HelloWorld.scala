@@ -133,8 +133,40 @@ object ScalaTour {
     val list2 = 0 :: list
     println(list2) // => List(0, 1, 2, 3)
     println(threeTimesThree((0 to 10).toList))
+
+    val msg1 = try {
+      "Hello" + " " + "World"
+    } catch {
+      case e: ArithmeticException => println(s"Invalid arithmetics(${e.getMessage})")
+      case e: Throwable => println("Unknown error")
+    } finally {
+      println("completed")
+    }
+    println(msg1)
+
+    try {
+      println(divide(0, 0))
+    } catch {
+      case e: ArithmeticException => println(s"Invalid arithmetics(${e.getMessage})")
+      case e: Throwable => println("Unknown error")
+    } finally {
+      println("completed")
+    }
+
+    try {
+      println(sthNotImplemented(10))
+    } catch {
+      case e: ArithmeticException => println(s"Invalid arithmetics(${e.getMessage})")
+      case e: Throwable => println("Unknown error")
+    } finally {
+      println("completed")
+    }
   }
 
+
+  def divide(x: Int, y: Int): Int = x / y
+
+  def sthNotImplemented(x: Int): Int = ???
 
   // 末尾最適化で値を返す場合のサンプル
   // 最大公約数の取得
