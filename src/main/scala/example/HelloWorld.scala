@@ -3,6 +3,8 @@ package example
 import example.FizzBuzz.{fizzBuzz, fizzBuzzMatch, fizzBuzzRecursion, toFizzBuzz}
 
 import scala.annotation.tailrec
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.util.Random
 
 // Appトレイトでエントリポイントを設定したもの
@@ -161,6 +163,29 @@ object ScalaTour {
     } finally {
       println("completed")
     }
+
+
+    val f1 = Future {
+      Thread.sleep(5000)
+      println("タスク1終了")
+      1
+    }
+
+    val f2 = Future {
+      Thread.sleep(1000)
+      println("タスク2終了")
+      2
+    }
+
+    for {
+      res1 <- f1
+      res2 <- f2
+    } {
+      println(res1 + res2)
+    }
+
+    println("Futureの中身が実行される前にここに来る")
+    Thread.sleep(5000) // Future実行前にmainから抜けるのを防止
   }
 
 
