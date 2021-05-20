@@ -5,7 +5,7 @@ import example.FizzBuzz.{fizzBuzz, fizzBuzzMatch, fizzBuzzRecursion, toFizzBuzz}
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.Random
+import scala.util.{Failure, Random, Success}
 
 // Appトレイトでエントリポイントを設定したもの
 object Hello extends App {
@@ -168,20 +168,20 @@ object ScalaTour {
     val f1 = Future {
       Thread.sleep(5000)
       println("タスク1終了")
-      1
+      4 / 2
     }
 
     val f2 = Future {
       Thread.sleep(1000)
       println("タスク2終了")
-      2
+      2 / 0
     }
 
-    for {
-      res1 <- f1
-      res2 <- f2
-    } {
-      println(res1 + res2)
+
+    val f = f1.zip(f2)
+    f.onComplete {
+      case Success(value) => println(value._1 + value._2)
+      case Failure(exception) => println(exception.getMessage)
     }
 
     println("Futureの中身が実行される前にここに来る")
