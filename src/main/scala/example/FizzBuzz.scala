@@ -1,10 +1,17 @@
 package example
 
+import org.json4s.DefaultFormats
+import org.json4s.jackson.Serialization.{read, write}
+import sbt.io.IO
+
+import java.io.File
 import scala.annotation.tailrec
 
 // FizzBuzzで様々な実装をしたサンプル
 
 object FizzBuzz {
+  implicit val formats = DefaultFormats
+
   // for式で単純に作る場合
   def fizzBuzz(n: Int): Unit = {
     for {i <- 1 to n} {
@@ -46,4 +53,31 @@ object FizzBuzz {
     case x if x % 5 == 0 => "Buzz"
     case x => x.toString
   }
+
+  def createSourceJson(n: Int, srcFile: File): Unit = {
+    require(n >= 1)
+
+    val intArrayHolder = IntArrayHolder((1 to n).toArray)
+    IO.write(srcFile, write(intArrayHolder))
+  }
+
+  def fizzBuzzFromJson(srcFile: File, dstFile: File): Unit = {
+    val rawJson = IO.read(srcFile)
+    val intArrayHolder = read[IntArrayHolder](rawJson)
+
+    val fizzBuzz = intArrayHolder.intArray.map {
+      case x if x % 15 == 0 => "FizzBuzz"
+      case x if x % 3 == 0 => "Fizz"
+      case x if x % 5 == 0 => "Buzz"
+      case x => x.toString
+    }
+
+    val fizzBuzzHolder = FizzBuzzHolder(fizzBuzz)
+    IO.write(dstFile, write(fizzBuzzHolder))
+  }
+
 }
+
+case class IntArrayHolder(intArray: Array[Int])
+
+case class FizzBuzzHolder(fizzBuzz: Array[String])
