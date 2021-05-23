@@ -23,6 +23,8 @@ object ScalaTour {
     fizzBuzzFromJson(sourceFile, destinationFile)
     println(IO.read(destinationFile))
 
+    Outer
+
     //    // HelloWorld
     //    val message = "example.Hello World"
     //    println(message)
@@ -216,6 +218,17 @@ object ScalaTour {
     // tailがNilで渡された場合はNilを返す
     case Nil => Nil
   }
+}
+
+object Outer {
+
+  // スコープ内のStringを拡張する
+  implicit class MyString(val str: String) extends AnyVal {
+    def addPeriod(): String = if (str.endsWith(".")) str else str + "."
+  }
+
+  println("Hello World".addPeriod())
+  println("Hello World.".addPeriod())
 }
 
 // applyを定義した場合のインスタンスに紐づくメソッドとクラスに紐づくメソッドのサンプル
