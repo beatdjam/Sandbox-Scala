@@ -60,25 +60,33 @@ trait Namable {
 class Employee(val name: String) extends AnyRef with Namable
 
 new Employee("太郎").display()
+//
+//trait Enumerable[A] {
+//  def foreach[B](fun: A => B): Unit
+//
+//  final def map[B](f: A => B): List[B] = {
+//    val members = mutable.Buffer.empty
+//    foreach { m => members += f(m) }
+//    members.toList
+//  }
+//
+//  final def filter(p: A => Boolean): List[A] = {
+//    val members = mutable.Buffer.empty[A]
+//    foreach { m => if (p(m)) members += m }
+//    members.toList
+//  }
+//
+//  final def toList: List[A] = {
+//    val members = mutable.Buffer.empty[A]
+//    foreach { m => members += m }
+//    members.toList
+//  }
+//}
 
-trait Enumerable[A] {
-  def foreach[B](fun: A => B): Unit
-
-  final def map[B](f: A => B): List[B] = {
-    val members = mutable.Buffer.empty
-    foreach { m => members += f(m) }
-    members.toList
-  }
-
-  final def filter(p: A => Boolean): List[A] = {
-    val members = mutable.Buffer.empty[A]
-    foreach { m => if (p(m)) members += m }
-    members.toList
-  }
-
-  final def toList: List[A] = {
-    val members = mutable.Buffer.empty[A]
-    foreach { m => members += m }
-    members.toList
-  }
+// Any method with a single parameter can be used as an infix operator.
+// https://docs.scala-lang.org/tour/operators.html
+case class MyString(s : String) {
+  def concat(that: MyString) : MyString = MyString(this.s + that.s)
 }
+
+println(MyString("hoge") concat MyString("taro"))
