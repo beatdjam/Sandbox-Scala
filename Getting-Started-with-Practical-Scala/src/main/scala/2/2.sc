@@ -1,4 +1,4 @@
-
+import scala.annotation.tailrec
 // 複数行リテラル
 """
 This is
@@ -120,3 +120,29 @@ p match {
     println(x)
     println(y)
 }
+
+// パターンマッチ
+def reverse[A](list: List[A], result: List[A]): List[A] = list match {
+  case x :: xs => reverse(xs, x :: result)
+  case Nil => result
+}
+
+reverse(List(1, 2, 3), Nil)
+
+def last2[A](list: List[A]): A = list match {
+  // (先頭の要素, 何らかの値, 範囲外) の時に先頭の要素を最後から2番目として返す
+  // :: を2回適用することで、 先頭の要素 :: (残りの要素の先頭 :: Nil) のようなネストしたパターンになっている
+  case x :: _ :: Nil => x
+  case _ :: xs => last2(xs)
+  case _ => sys.error("Invalid List.Should have 2 elements.")
+}
+
+// ローカルメソッド
+def factorial(n: Int): Int = {
+  @tailrec
+  def f(m: Int, x: Int): Int = if (m == 0) x else f(m - 1, x * m)
+
+  f(n, 1)
+}
+
+factorial(5)
