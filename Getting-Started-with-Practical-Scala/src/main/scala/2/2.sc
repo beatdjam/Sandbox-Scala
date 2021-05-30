@@ -1,4 +1,4 @@
-import scala.collection.mutable
+
 // 複数行リテラル
 """
 This is
@@ -85,8 +85,38 @@ new Employee("太郎").display()
 
 // Any method with a single parameter can be used as an infix operator.
 // https://docs.scala-lang.org/tour/operators.html
-case class MyString(s : String) {
-  def concat(that: MyString) : MyString = MyString(this.s + that.s)
+case class MyString(s: String) {
+  def concat(that: MyString): MyString = MyString(this.s + that.s)
 }
 
 println(MyString("hoge") concat MyString("taro"))
+
+// 下のPointクラスとそのコンパニオンオブジェクトと等価
+case class Point(x: Int, y: Int)
+
+//class Point(val x: Int, val y: Int) {
+//  override def hashCode(): Int = x + y
+//
+//  override def equals(that: Any): Boolean = that match {
+//    case that: Point => x == that.x && y == that.y
+//    case _ => false
+//  }
+//
+//  override def toString: String = s"Point($x,$y)"
+//}
+//
+//object Point {
+//  def apply(x: Int, y: Int): Point = new Point(x, y)
+//}
+
+// ケースクラスはMapのKeyにできる
+val map = Map(Point(10, 10) -> 1, Point(20, 20) -> 2)
+map(Point(10, 10))
+map(Point(20, 20))
+
+val p = Point(1, 2)
+p match {
+  case Point(x, y) =>
+    println(x)
+    println(y)
+}
