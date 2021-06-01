@@ -1,4 +1,5 @@
 import scala.annotation.tailrec
+import scala.language.implicitConversions
 // 複数行リテラル
 """
 This is
@@ -146,3 +147,36 @@ def factorial(n: Int): Int = {
 }
 
 factorial(5)
+
+// lazy
+case class Circle(x: Int, y: Int, radius: Int) {
+  lazy val area: Double = {
+    println("面積を計算します")
+    radius * radius * math.Pi
+  }
+}
+
+val c = Circle(0, 0, 5)
+c.area
+c.area
+
+// 暗黙の型変換
+val hoge = {
+  // 既存の型を要求する箇所に任意の型が来た時に読み替える型変換
+  // 現在は非推奨とされている
+  implicit def intToBoolean(n: Int): Boolean = n != 0
+
+  if (1) {
+    println("1 is true")
+  }
+
+  // 既存の型に存在しないメソッドを拡張し、元の型に生えてるように見せかける型変換
+  class IntExt(val self: Int) {
+    def isPositive: Boolean = self > 0
+  }
+
+  implicit def intExt(self: Int): IntExt = new IntExt(self)
+
+  // Intに生えてないメソッドを呼んだ時、暗黙の型変換で読み替えられた先のメソッドが呼び出せる
+  println(1.isPositive)
+}
