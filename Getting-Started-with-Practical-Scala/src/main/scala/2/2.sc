@@ -161,7 +161,7 @@ c.area
 c.area
 
 // 暗黙の型変換
-val hoge = {
+val implicitConversion: Unit = {
   // 既存の型を要求する箇所に任意の型が来た時に読み替える型変換
   // 現在は非推奨とされている
   implicit def intToBoolean(n: Int): Boolean = n != 0
@@ -180,3 +180,59 @@ val hoge = {
   // Intに生えてないメソッドを呼んだ時、暗黙の型変換で読み替えられた先のメソッドが呼び出せる
   println(1.isPositive)
 }
+
+// 型を拡張するときはimplicit classを使うのが今風らしい
+val implicitClass: Unit = {
+  // 暗黙クラス
+  implicit class IntExt(val self: Int) {
+    def isPositive: Boolean = self > 0
+  }
+  println(1.isPositive)
+}
+
+// 暗黙パラメータ
+// Intが渡されなかった時に暗黙的に解決する
+implicit val context: Int = 1
+def printContext(implicit ctx: Int): Unit = {
+  println(ctx)
+}
+printContext
+
+// リストの音要素の値を合計して返す
+// implicit parameterを使わない場合
+def sumInt(list: List[Int]): Int = list.foldLeft(0) {
+  (acc, x) => acc + x
+}
+sumInt(List(1, 2, 3, 4))
+
+// 加算するときの振る舞いのtrait
+trait Adder[T] {
+  def zero: T
+
+  def plus(x: T, y: T): T
+}
+
+// 加算の処理
+def sum[T](list: List[T])(implicit adder: Adder[T]): T = {
+  list.foldLeft(adder.zero) { (acc, x) => adder.plus(acc, x) }
+}
+
+implicit object IntAdder extends Adder[Int] {
+  def zero: Int = 0
+
+  def plus(x: Int, y: Int): Int = x + y
+}
+
+implicit object DoubleAdder extends Adder[Double] {
+  def zero: Double = 0.0
+
+  def plus(x: Double, y: Double): Double = x + y
+}
+
+// 明示的にAdderの実装を渡す場合
+//sum(List(1, 2, 3, 4))(IntAdder)
+//sum(List(1.5, 2.0, 3.2, 4.9))(DoubleAdder)
+
+// implicit parameterで自動的に対応するAdderを呼び出す
+sum(List(1, 2, 3, 4))
+sum(List(1.5, 2.0, 3.2, 4.9))
