@@ -32,3 +32,22 @@ plusByForExpression(None, Option(2))
 
 plusByForExpression(Option(2), Option(3)).getOrElse(0)
 plusByForExpression(Option(2), None).getOrElse(0)
+
+// 変位指定アノテーション
+class Animal
+
+class Human extends Animal
+
+// 共変(サブタイプ関係を引き継ぐ)
+class CoVariantType[+A](a: A)
+
+val myHuman: CoVariantType[Human] = new CoVariantType(new Human)
+val myAnimal: CoVariantType[Animal] = myHuman
+
+// 反変(サブタイプ関係が逆転する)
+class ContraVariantType[-A](a: A)
+val myAnimal: ContraVariantType[Animal] = new ContraVariantType(new Animal)
+val myHuman: ContraVariantType[Human] = myAnimal
+
+// 非変(サブタイプを許容しない)
+class InVariantType[A](a: A)
