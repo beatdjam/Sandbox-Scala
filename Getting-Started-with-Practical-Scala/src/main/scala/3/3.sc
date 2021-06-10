@@ -46,8 +46,20 @@ val myAnimal: CoVariantType[Animal] = myHuman
 
 // 反変(サブタイプ関係が逆転する)
 class ContraVariantType[-A](a: A)
+
 val myAnimal: ContraVariantType[Animal] = new ContraVariantType(new Animal)
 val myHuman: ContraVariantType[Human] = myAnimal
 
 // 非変(サブタイプを許容しない)
 class InVariantType[A](a: A)
+
+// Either
+def fileSize(file: File): Either[String, Long] =
+  if (file.exists()) Right(file.length()) else Left("File not exists")
+
+// foreach使うとRightを取り出す
+val r: Either[String, Int] = Right(100)
+r.foreach(println)
+val l: Either[String, Int] = Left("Error")
+l.foreach(println)
+l.left.foreach(println)
