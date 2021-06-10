@@ -1,4 +1,5 @@
 import java.io.File
+import scala.util.Try
 
 // Javaのnull返却をラップするだけのメソッド
 def myListFiles(directory: File): Option[Array[File]] = Option(directory.listFiles())
@@ -63,3 +64,10 @@ r.foreach(println)
 val l: Either[String, Int] = Left("Error")
 l.foreach(println)
 l.left.foreach(println)
+
+// Try
+def div(a: Int, b: Int): Try[Int] = Try(a / b)
+div(10, 3).foreach(println)
+div(10, 0).failed.foreach(println)
+div(10, 0).recover { case _: ArithmeticException => 0 }.foreach(println)
+div(10, 0).recoverWith { case _: ArithmeticException => Try(0) }.foreach(println)
