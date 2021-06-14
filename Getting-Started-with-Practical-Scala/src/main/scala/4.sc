@@ -1,3 +1,5 @@
+import scala.collection.mutable
+
 val immutableSeq = scala.collection.immutable.Seq(1, 2, 3)
 val mutableSeq = scala.collection.mutable.Seq(1, 2, 3)
 
@@ -24,11 +26,21 @@ def reverseByFoldLeft[A](seq: Seq[A])
 def reverseByFoldRight[A](seq: Seq[A])
 = seq.foldRight(Seq[A]())((e, a) => a :+ e)
 
-reverseByFoldLeft(Seq(1,2,3))
-reverseByFoldRight(Seq(1,2,3))
+reverseByFoldLeft(Seq(1, 2, 3))
+reverseByFoldRight(Seq(1, 2, 3))
 
 // = Sum
-Seq(1,2,3).reduceLeft(_ + _)
-Seq(1,2,3).reduceRight(_ + _)
+Seq(1, 2, 3).reduceLeft(_ + _)
+Seq(1, 2, 3).reduceRight(_ + _)
 
-Seq(1,2,3,1,2).toSet
+Seq(1, 2, 3, 1, 2).toSet
+
+val set = Set("A", "B", "C")
+set.contains("A")
+// setのインスタンスのapplyはcontainsを呼ぶ
+set("A")
+set("D")
+
+val mutableSet = mutable.Set(1, 2)
+mutableSet += (3, 4)
+mutableSet -= (2, 3)
