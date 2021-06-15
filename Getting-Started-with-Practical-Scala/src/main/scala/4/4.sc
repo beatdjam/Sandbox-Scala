@@ -44,3 +44,16 @@ set("D")
 val mutableSet = mutable.Set(1, 2)
 mutableSet += (3, 4)
 mutableSet -= (2, 3)
+
+val fruits = Map("Apple" -> 150, "Orange" -> 100)
+fruits("Apple")
+fruits.get("Banana")
+fruits.getOrElse("Banana", "No Element")
+fruits.keys
+fruits.values
+fruits.size
+
+val fruits2 = fruits + ("Banana" -> 120)
+val fruits3 = fruits ++ Map("Lemon" -> 210)
+"Lemon" -> 120
+
