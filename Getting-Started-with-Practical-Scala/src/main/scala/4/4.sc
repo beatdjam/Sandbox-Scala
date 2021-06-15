@@ -54,6 +54,5 @@ fruits.values
 fruits.size
 
 val fruits2 = fruits + ("Banana" -> 120)
-val fruits3 = fruits ++ Map("Lemon" -> 210)
+val fruits3 = scala.collection.mutable.Map("Apple" -> 150, "Orange" -> 100) ++ Map("Lemon" -> 210)
 "Lemon" -> 120
-
