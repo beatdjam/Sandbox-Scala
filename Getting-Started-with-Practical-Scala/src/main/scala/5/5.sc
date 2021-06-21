@@ -1,5 +1,6 @@
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 import scala.io.{BufferedSource, Source}
 import scala.util.{Failure, Success}
 
@@ -55,3 +56,31 @@ failedFuture.onComplete {
 // 既にある値をFutureでくるむ
 val futureSuccessful = Future.successful(2)
 val futureFailure = Future.failed(new Exception("sample"))
+
+// Futureに生えているmapはFutureの値を変換する
+Future(HttpTextClient.get("https://scalamatsuri.org/"))
+  .map(s => try s.mkString finally s.close)
+  .onComplete {
+    case Success(body) => println(body)
+    case Failure(throwable) => throwable.printStackTrace()
+  }
+
+// 非同期にGETしてレスポンスのbodyを
+def getAsync(url: String): Future[String] = Future(HttpTextClient.get(url))
+  .map(s => try s.mkString finally s.close)
+
+// 引数に渡した文字列からURLを非同期に抽出する
+def extractURLAsync(body: String): Future[collection.Seq[String]] = {
+  val urlRegex = """https?://[\w.:$%?&()=+\-~]+""".r
+  Future(urlRegex.findAllIn(body).toSeq)
+}
+
+val urlsFuture: Future[collection.Seq[String]] =
+  getAsync("https://scalamatsuri.org/").flatMap(extractURLAsync)
+
+urlsFuture.onComplete {
+  case Success(list) => list.foreach(println)
+  case Failure(t) => t.printStackTrace()
+}
+Await.result(urlsFuture, Duration.Inf)
+
