@@ -29,41 +29,43 @@ object HttpTextClient {
   def get(url: String): BufferedSource = Source.fromURL(url)
 }
 
-// 既存の関数をくるむことでFutureにできる
-val responseFuture: Future[BufferedSource]
-= Future(HttpTextClient.get("https://scalamatsuri.org/"))
-
-// FutureにあとからCallbackを仕込むことができる
-responseFuture.onComplete {
-  case Success(body) =>
-    println(body.mkString)
-    body.close()
-  case Failure(throwable) => println("エラーが発生" + throwable.toString)
-}
-
-val failedFuture = Future(HttpTextClient.get("hoge"))
-failedFuture.onComplete {
-  case Success(body) =>
-    println(body.mkString)
-    body.close()
-  case Failure(throwable) => println("エラーが発生 " + throwable.toString)
-}
+//// 既存の関数をくるむことでFutureにできる
+//val responseFuture: Future[BufferedSource]
+//= Future(HttpTextClient.get("https://scalamatsuri.org/"))
+//
+//// FutureにあとからCallbackを仕込むことができる
+//responseFuture.onComplete {
+//  case Success(body) =>
+//    println(body.mkString)
+//    body.close()
+//  case Failure(throwable) => println("エラーが発生" + throwable.toString)
+//}
+//
+//val failedFuture = Future(HttpTextClient.get("hoge"))
+//failedFuture.onComplete {
+//  case Success(body) =>
+//    println(body.mkString)
+//    body.close()
+//  case Failure(throwable) => println("エラーが発生 " + throwable.toString)
+//}
 
 // Futureの実行を待つ
 //Await.result(responseFuture, Duration.Inf)
 //Await.result(failedFuture, Duration.Inf)
 
 // 既にある値をFutureでくるむ
-val futureSuccessful = Future.successful(2)
-val futureFailure = Future.failed(new Exception("sample"))
+//val futureSuccessful = Future.successful(2)
+//val futureFailure = Future.failed(new Exception("sample"))
+//Await.result(futureSuccessful, Duration.Inf)
+//Await.result(futureFailure, Duration.Inf)
 
 // Futureに生えているmapはFutureの値を変換する
-Future(HttpTextClient.get("https://scalamatsuri.org/"))
-  .map(s => try s.mkString finally s.close)
-  .onComplete {
-    case Success(body) => println(body)
-    case Failure(throwable) => throwable.printStackTrace()
-  }
+//Future(HttpTextClient.get("https://scalamatsuri.org/"))
+//  .map(s => try s.mkString finally s.close)
+//  .onComplete {
+//    case Success(body) => println(body)
+//    case Failure(throwable) => throwable.printStackTrace()
+//  }
 
 // 非同期にGETしてレスポンスのbodyを
 def getAsync(url: String): Future[String] = Future(HttpTextClient.get(url))
@@ -83,7 +85,6 @@ urlsFuture.onComplete {
   case Success(list) => list.foreach(println)
   case Failure(t) => t.printStackTrace()
 }
-Await.result(urlsFuture, Duration.Inf)
 
 val urlsInMatsuri = getAsync("https://scalamatsuri.org/").flatMap(extractURLAsync)
 val urlsInOfficial = getAsync("https://scala-lang.org/").flatMap(extractURLAsync)
@@ -97,4 +98,16 @@ urls.onComplete {
   case Failure(t) => t.printStackTrace()
 }
 
-Await.result(urlsFuture, Duration.Inf)
+// andThenはブロック内の処理結果に関わらず、inputと同じfutureを出力する
+// Futureの値を用いて副作用のある処理を行う場合などに使う？らしい
+val andThen = getAsync("https://scalamatsuri.org/")
+andThen
+  .andThen {
+    case Success(body) => println("body :" + body)
+  }
+  .flatMap(extractURLAsync)
+  .onComplete {
+    case Success(list) => list.foreach(println)
+    case Failure(t) => t.printStackTrace()
+  }
+Await.result(andThen, Duration.Inf)
