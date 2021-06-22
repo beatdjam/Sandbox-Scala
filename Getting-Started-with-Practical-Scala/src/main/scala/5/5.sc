@@ -75,6 +75,7 @@ def extractURLAsync(body: String): Future[collection.Seq[String]] = {
   Future(urlRegex.findAllIn(body).toSeq)
 }
 
+// FutureのListを作って処理する
 val urlsFuture: Future[collection.Seq[String]] =
   getAsync("https://scalamatsuri.org/").flatMap(extractURLAsync)
 
@@ -84,3 +85,16 @@ urlsFuture.onComplete {
 }
 Await.result(urlsFuture, Duration.Inf)
 
+val urlsInMatsuri = getAsync("https://scalamatsuri.org/").flatMap(extractURLAsync)
+val urlsInOfficial = getAsync("https://scala-lang.org/").flatMap(extractURLAsync)
+val urls = for {
+  mUrls <- urlsInMatsuri
+  oUrls <- urlsInOfficial
+} yield mUrls.appendedAll(oUrls)
+
+urls.onComplete {
+  case Success(list) => list.mkString(", ")
+  case Failure(t) => t.printStackTrace()
+}
+
+Await.result(urlsFuture, Duration.Inf)
