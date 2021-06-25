@@ -127,3 +127,4 @@ failed2.recoverWith {
   case t => Future.failed(t)
 }
 Await.result(failed2, Duration.Inf)
+
