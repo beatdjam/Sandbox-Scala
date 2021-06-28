@@ -5,29 +5,30 @@ import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.TryValues.convertTryToSuccessOrFailure
 import org.scalatest.{FunSpec, FunSuite, WordSpec}
 
+import scala.collection.mutable
 import scala.util.Try
 
 // FunSuiteはxUnit形式のテストスタイル
 // FunSpecやWordSpecより表現力が低い
-class GreetingTest extends FunSuite {
+class TestExampleTest extends FunSuite {
   test("引数の人物名に対する挨拶が生成される") {
-    val msg = Greeting.createMessage("John")
+    val msg = TestExample.createMessage("John")
     assert(msg == "Hello, John!")
   }
   test("引数の人物名が空文字列の場合、IllegalArgumentExceptionが投げられる") {
     assertThrows[IllegalArgumentException] {
-      Greeting.createMessage("")
+      TestExample.createMessage("")
     }
   }
 }
 
 // FunSpecはRSpecライクな記述が可能
 // describeで説明をネストさせることができるので、構造的なふるまいの記述がしやすい
-class GreetingTestFunSpec extends FunSpec {
+class TestExampleTestFunSpec extends FunSpec {
   describe("挨拶") {
     describe("引数の人物名が空でない場合は") {
       it("挨拶が生成される") {
-        val msg = Greeting.createMessage("John")
+        val msg = TestExample.createMessage("John")
         assert(msg == "Hello, John!")
       }
     }
@@ -35,7 +36,7 @@ class GreetingTestFunSpec extends FunSpec {
     describe("引数の人物名が空の場合は") {
       it("IllegalArgumentExceptionが投げられる") {
         assertThrows[IllegalArgumentException] {
-          Greeting.createMessage("")
+          TestExample.createMessage("")
         }
       }
     }
@@ -44,18 +45,18 @@ class GreetingTestFunSpec extends FunSpec {
 
 // WordSpecはspecs2ライクな記述が可能
 // 英語で記述したときに自然な文章になるようDSLが設計されている
-class GreetingTestWordSpec extends WordSpec {
+class TestExampleTestWordSpec extends WordSpec {
   "挨拶処理の" when {
     "引数の人物名が空でない場合は" should {
       "挨拶が生成される" in {
-        val msg = Greeting.createMessage("John")
+        val msg = TestExample.createMessage("John")
         assert(msg == "Hello, John!")
       }
     }
     "引数の人物名が空の場合は" should {
       "IllegalArgumentExceptionが投げられる" in
         assertThrows[IllegalArgumentException] {
-          Greeting.createMessage("")
+          TestExample.createMessage("")
         }
     }
   }
@@ -86,5 +87,34 @@ class Test extends FunSuite {
   test("数値文字列を Int型の値にパースできる(Either)") {
     assert(parseInt("1").toEither.right.value == 1)
   }
+}
 
+class ConfigManagerBoilerplateTest extends FunSuite {
+  test("すでに設定キーが存在していた場合は設定値が上書きされる") {
+    val configManager = new ConfigManager {
+      override val envPrefix: String = "test"
+      override val config: mutable.Map[String, String] = mutable.Map(
+        "test.user" -> "John",
+        "test.url" -> " http://example.com"
+      )
+    }
+
+    configManager.upsertConfig("user", "Richard")
+    assert(configManager.numOfConfig() == 2)
+    assert(configManager.readConfig("user") == "Richard")
+  }
+
+
+  test("clearAllメソッドを実行すると設定値がすべて削除される") {
+    val configManager = new ConfigManager {
+      override val envPrefix: String = "test"
+      override val config: mutable.Map[String, String] = mutable.Map(
+        "test.user" -> "John",
+        "test.url" -> " http://example.com"
+      )
+    }
+
+    configManager.clearAll()
+    assert(configManager.numOfConfig() == 0)
+  }
 }
