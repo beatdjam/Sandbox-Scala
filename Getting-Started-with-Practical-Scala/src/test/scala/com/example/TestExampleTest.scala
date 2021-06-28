@@ -3,7 +3,7 @@ package com.example
 import org.scalatest.EitherValues.convertRightProjectionToValuable
 import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.TryValues.convertTryToSuccessOrFailure
-import org.scalatest.{FunSpec, FunSuite, WordSpec}
+import org.scalatest.{BeforeAndAfter, FunSpec, FunSuite, WordSpec}
 
 import scala.collection.mutable
 import scala.util.Try
@@ -95,7 +95,7 @@ class ConfigManagerBoilerplateTest extends FunSuite {
       override val envPrefix: String = "test"
       override val config: mutable.Map[String, String] = mutable.Map(
         "test.user" -> "John",
-        "test.url" -> " http://example.com"
+        "test.url" -> " https://example.com"
       )
     }
 
@@ -107,13 +107,71 @@ class ConfigManagerBoilerplateTest extends FunSuite {
 
   test("clearAllメソッドを実行すると設定値がすべて削除される") {
     val configManager = new ConfigManager {
-      override val envPrefix: String = "test"
-      override val config: mutable.Map[String, String] = mutable.Map(
+      val envPrefix: String = "test"
+      val config: mutable.Map[String, String] = mutable.Map(
         "test.user" -> "John",
-        "test.url" -> " http://example.com"
+        "test.url" -> " https://example.com"
       )
     }
 
+    configManager.clearAll()
+    assert(configManager.numOfConfig() == 0)
+  }
+
+  trait TestFixture {
+    val configManager: ConfigManager = new ConfigManager {
+      val envPrefix: String = "test"
+      val config: mutable.Map[String, String] = mutable.Map(
+        "test.user" -> "John",
+        "test.url" -> " https://example.com"
+      )
+    }
+  }
+
+
+  test("すでに設定キーが存在していた場合は設定値が上書きされる(trait)") {
+    new TestFixture {
+      configManager.upsertConfig("user", "Richard")
+      assert(configManager.numOfConfig() == 2)
+      assert(configManager.readConfig("user") == "Richard")
+    }
+  }
+
+
+  test("clearAllメソッドを実行すると設定値がすべて削除される(trait)") {
+    new TestFixture {
+      configManager.clearAll()
+      assert(configManager.numOfConfig() == 0)
+    }
+  }
+}
+
+class ConfigManagerBeforeAndAfterTest extends FunSuite with BeforeAndAfter {
+  val configManager: ConfigManager = new ConfigManager {
+    val envPrefix: String = "test"
+    val config: mutable.Map[String, String] = mutable.Map.empty
+  }
+
+  before {
+    configManager.config.addAll(
+      mutable.Map(
+        "test.user" -> "John",
+        "test.url" -> " https://example.com"
+      )
+    )
+  }
+
+  after {
+    configManager.clearAll()
+  }
+  test("すでに設定キーが存在していた場合は設定値が上書きされる(Fixture)") {
+    configManager.upsertConfig("user", "Richard")
+    assert(configManager.numOfConfig() == 2)
+    assert(configManager.readConfig("user") == "Richard")
+  }
+
+
+  test("clearAllメソッドを実行すると設定値がすべて削除される(Fixture)") {
     configManager.clearAll()
     assert(configManager.numOfConfig() == 0)
   }
