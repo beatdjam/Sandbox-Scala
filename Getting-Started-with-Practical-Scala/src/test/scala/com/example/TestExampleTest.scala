@@ -3,14 +3,17 @@ package com.example
 import org.scalatest.EitherValues.convertRightProjectionToValuable
 import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.TryValues.convertTryToSuccessOrFailure
-import org.scalatest.{BeforeAndAfter, FunSpec, FunSuite, WordSpec}
+import org.scalatest._
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.wordspec.AnyWordSpec
 
 import scala.collection.mutable
 import scala.util.Try
 
-// FunSuiteはxUnit形式のテストスタイル
+// AnyFunSuiteはxUnit形式のテストスタイル
 // FunSpecやWordSpecより表現力が低い
-class TestExampleTest extends FunSuite {
+class TestExampleTest extends AnyFunSuite {
   test("引数の人物名に対する挨拶が生成される") {
     val msg = TestExample.createMessage("John")
     assert(msg == "Hello, John!")
@@ -24,7 +27,7 @@ class TestExampleTest extends FunSuite {
 
 // FunSpecはRSpecライクな記述が可能
 // describeで説明をネストさせることができるので、構造的なふるまいの記述がしやすい
-class TestExampleTestFunSpec extends FunSpec {
+class TestExampleTestFunSpec extends AnyFunSpec {
   describe("挨拶") {
     describe("引数の人物名が空でない場合は") {
       it("挨拶が生成される") {
@@ -45,7 +48,7 @@ class TestExampleTestFunSpec extends FunSpec {
 
 // WordSpecはspecs2ライクな記述が可能
 // 英語で記述したときに自然な文章になるようDSLが設計されている
-class TestExampleTestWordSpec extends WordSpec {
+class TestExampleTestWordSpec extends AnyWordSpec {
   "挨拶処理の" when {
     "引数の人物名が空でない場合は" should {
       "挨拶が生成される" in {
@@ -63,7 +66,7 @@ class TestExampleTestWordSpec extends WordSpec {
 }
 
 
-class Test extends FunSuite {
+class Test extends AnyFunSuite {
   // org.scalatest.OptionValuesを利用してOptionに値を取得するメソッドを生やす
   val mappings = Map(
     "red" -> "#FF0000",
@@ -89,7 +92,7 @@ class Test extends FunSuite {
   }
 }
 
-class ConfigManagerBoilerplateTest extends FunSuite {
+class ConfigManagerBoilerplateTest extends AnyFunSuite {
   test("すでに設定キーが存在していた場合は設定値が上書きされる") {
     val configManager = new ConfigManager {
       override val envPrefix: String = "test"
@@ -146,7 +149,7 @@ class ConfigManagerBoilerplateTest extends FunSuite {
   }
 }
 
-class ConfigManagerBeforeAndAfterTest extends FunSuite with BeforeAndAfter {
+class ConfigManagerBeforeAndAfterTest extends AnyFunSuite with BeforeAndAfter with PrivateMethodTester {
   val configManager: ConfigManager = new ConfigManager {
     val envPrefix: String = "test"
     val config: mutable.Map[String, String] = mutable.Map.empty
@@ -160,19 +163,30 @@ class ConfigManagerBeforeAndAfterTest extends FunSuite with BeforeAndAfter {
       )
     )
   }
-
   after {
     configManager.clearAll()
   }
+
   test("すでに設定キーが存在していた場合は設定値が上書きされる(Fixture)") {
     configManager.upsertConfig("user", "Richard")
     assert(configManager.numOfConfig() == 2)
     assert(configManager.readConfig("user") == "Richard")
   }
 
-
   test("clearAllメソッドを実行すると設定値がすべて削除される(Fixture)") {
     configManager.clearAll()
     assert(configManager.numOfConfig() == 0)
+  }
+}
+
+class PrivateMethodTest extends AnyFunSuite with PrivateMethodTester {
+  class Foo {
+    private def inc(i: Int): Int = i + 1
+  }
+
+  val method: PrivateMethod[Int] = PrivateMethod[Int]('inc)
+  val result: Int = new Foo().invokePrivate(method(1))
+  test("privateメソッドのテスト") {
+    assert(result == 2)
   }
 }
