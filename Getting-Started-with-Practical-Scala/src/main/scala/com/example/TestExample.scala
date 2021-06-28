@@ -1,6 +1,7 @@
 package com.example
 
 import scala.collection.mutable
+import scala.concurrent.{ExecutionContext, Future}
 
 object TestExample {
   def createMessage(targetName: String): String = {
@@ -22,4 +23,10 @@ trait ConfigManager {
   def numOfConfig(): Int = config.size
 
   def clearAll(): Unit = config.clear()
+}
+
+object AsyncCalculator {
+  def div(i: Int, j: Int)(implicit ec: ExecutionContext): Future[Int] = Future {
+    i / j
+  }
 }

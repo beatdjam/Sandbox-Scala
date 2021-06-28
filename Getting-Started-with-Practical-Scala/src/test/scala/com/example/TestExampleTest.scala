@@ -5,7 +5,7 @@ import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.TryValues.convertTryToSuccessOrFailure
 import org.scalatest._
 import org.scalatest.funspec.AnyFunSpec
-import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.funsuite.{AnyFunSuite, AsyncFunSuite}
 import org.scalatest.wordspec.AnyWordSpec
 
 import scala.collection.mutable
@@ -188,5 +188,17 @@ class PrivateMethodTest extends AnyFunSuite with PrivateMethodTester {
   val result: Int = new Foo().invokePrivate(method(1))
   test("privateメソッドのテスト") {
     assert(result == 2)
+  }
+}
+
+class AsyncCalculatorTest extends AsyncFunSuite {
+  test("非同期テスト") {
+    AsyncCalculator.div(10, 2).map { result => assert(result == 5) }
+  }
+
+  test("ArithmeticException") {
+    recoverToSucceededIf[ArithmeticException] {
+      AsyncCalculator.div(1, 0)
+    }
   }
 }
