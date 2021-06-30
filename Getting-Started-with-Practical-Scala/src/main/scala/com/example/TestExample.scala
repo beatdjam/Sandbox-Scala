@@ -30,3 +30,23 @@ object AsyncCalculator {
     i / j
   }
 }
+
+case class Spreadsheet(id: String, sheets: Map[String, Spreadsheet.Sheet])
+
+object Spreadsheet {
+  type Sheet = Seq[Seq[String]]
+}
+
+class SpreadsheetReader(spreadsheet: Spreadsheet) {
+  def readSheetId: String = spreadsheet.id
+
+  def readSheetNames: Seq[String] = spreadsheet.sheets.keys.toSeq
+
+  def readSheet(sheetName: String): Option[Spreadsheet.Sheet] =
+    spreadsheet.sheets.collectFirst {
+      case (name, sheet) if name == sheetName => sheet
+    }
+
+  def isEmptySheet(sheetName: String): Boolean =
+    readSheet(sheetName).exists(_.isEmpty)
+}

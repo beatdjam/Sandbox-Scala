@@ -1,5 +1,9 @@
 package com.example
 
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito
+import org.mockito.Mockito.{never, times, verify, when}
+import org.mockito.exceptions.verification.WantedButNotInvoked
 import org.scalatest.EitherValues.convertRightProjectionToValuable
 import org.scalatest.OptionValues.convertOptionToValuable
 import org.scalatest.TryValues.convertTryToSuccessOrFailure
@@ -78,7 +82,7 @@ class Test extends AnyFunSuite {
   }
 
   test("green") {
-    assert(mappings.get("green").value == "#00FF00")
+    assert(mappings.get("green") == None)
   }
 
   // Try、Eitherも同じように値を取得するメソッドがある
@@ -199,6 +203,48 @@ class AsyncCalculatorTest extends AsyncFunSuite {
   test("ArithmeticException") {
     recoverToSucceededIf[ArithmeticException] {
       AsyncCalculator.div(1, 0)
+    }
+  }
+}
+
+
+class SpreadsheetReaderTest extends AnyFunSuite {
+  val mockedSpreadSheetReader: SpreadsheetReader =
+    Mockito.mock(classOf[SpreadsheetReader])
+
+  when(mockedSpreadSheetReader.readSheet("sheet_1"))
+    .thenReturn(Some(Seq.empty))
+  when(mockedSpreadSheetReader.readSheet("sheet_2"))
+    .thenReturn(None)
+  when(mockedSpreadSheetReader.isEmptySheet(any[String]))
+    .thenReturn(true)
+
+  test("readSheetの引数にwhenで指定されていない文字列を渡すとnull") {
+    assert(mockedSpreadSheetReader.readSheet("sheet_other") == null)
+  }
+
+  test("readSheetの引数がsheet_1なら Some") {
+    assert(mockedSpreadSheetReader.readSheet("sheet_1").value == Nil)
+    verify(mockedSpreadSheetReader, times(1)).readSheet("sheet_1")
+  }
+
+  test("readSheetの引数がsheet_2ならNone") {
+    assert(mockedSpreadSheetReader.readSheet("sheet_2") == None)
+    verify(mockedSpreadSheetReader, times(1)).readSheet("sheet_1")
+  }
+
+  test("isEmptySheetの引数に任意の文字列を渡すとtrue") {
+    assert(mockedSpreadSheetReader.isEmptySheet("sheet_other"))
+    assert(mockedSpreadSheetReader.isEmptySheet("sheet_sample"))
+    assert(mockedSpreadSheetReader.isEmptySheet("foo_bar"))
+
+    verify(mockedSpreadSheetReader, times(3)).isEmptySheet(any[String])
+    verify(mockedSpreadSheetReader, never()).readSheetNames
+  }
+
+  test("Mockito#verifyで検証が通らなかった場合はWantedButNotInvoked") {
+    assertThrows[WantedButNotInvoked] {
+      verify(mockedSpreadSheetReader, times(1)).readSheetId
     }
   }
 }
