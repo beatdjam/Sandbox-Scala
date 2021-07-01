@@ -248,3 +248,29 @@ class SpreadsheetReaderTest extends AnyFunSuite {
     }
   }
 }
+
+class authServiceTest extends AnyFunSuite {
+  val (john, jane, password) = ("john", "jane", "password")
+
+  val mockedUserRepository: UserRepository = Mockito.mock(classOf[UserRepository])
+
+  when(mockedUserRepository.findByName(john))
+    .thenReturn(Some(User(1, john, password)))
+
+  when(mockedUserRepository.findByName(jane))
+    .thenReturn(None)
+
+  val authService: AuthService = new AuthService(mockedUserRepository)
+
+  test("ユーザーが見つかり、パスワードが一致した場合はtrue") {
+    assert(authService.authenticate(john, password))
+    verify(mockedUserRepository, never()).save(any[Long])
+    verify(mockedUserRepository, times(1)).findByName(john)
+  }
+
+  test("ユーザーが見つからない場合はfalse") {
+    assert(!authService.authenticate(jane, password))
+    verify(mockedUserRepository, never()).save(any[Long])
+    verify(mockedUserRepository, times(1)).findByName(jane)
+  }
+}

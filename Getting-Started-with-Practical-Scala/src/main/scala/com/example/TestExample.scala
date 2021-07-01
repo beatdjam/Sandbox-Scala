@@ -25,12 +25,14 @@ trait ConfigManager {
   def clearAll(): Unit = config.clear()
 }
 
+// 非同期サンプル用
 object AsyncCalculator {
   def div(i: Int, j: Int)(implicit ec: ExecutionContext): Future[Int] = Future {
     i / j
   }
 }
 
+// Mockitoサンプル用
 case class Spreadsheet(id: String, sheets: Map[String, Spreadsheet.Sheet])
 
 object Spreadsheet {
@@ -49,4 +51,22 @@ class SpreadsheetReader(spreadsheet: Spreadsheet) {
 
   def isEmptySheet(sheetName: String): Boolean =
     readSheet(sheetName).exists(_.isEmpty)
+}
+
+// Mockitoサンプル用2
+case class User(id: Long, name: String, password: String)
+
+trait UserRepository {
+  def save(id: Long): Unit
+
+  def findById(id: Long): Option[User]
+
+  def findByName(name: String): Option[User]
+}
+
+class AuthService(userRepository: UserRepository) {
+  def authenticate(userName: String, password: String): Boolean =
+    userRepository
+      .findByName(userName)
+      .exists(_.password == password)
 }
