@@ -10,7 +10,6 @@ import org.scalatest.TryValues.convertTryToSuccessOrFailure
 import org.scalatest._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.funsuite.{AnyFunSuite, AsyncFunSuite}
-import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
@@ -277,11 +276,18 @@ class authServiceTest extends AnyFunSuite {
   }
 }
 
-// TODO scalacheck必要？
 class StringLengthTest extends AnyFunSuite with ScalaCheckPropertyChecks {
   test("a.length + b.length == (a + b).length") {
     forAll { (a: String, b: String) =>
       assert(a.length + b.length == (a + b).length)
+    }
+  }
+
+  test("2つの文字列を結合すると1文字以上である") {
+    forAll { (s: String, t: String) =>
+      whenever(s.nonEmpty && t.nonEmpty) {
+        assert((s + t).nonEmpty)
+      }
     }
   }
 }
