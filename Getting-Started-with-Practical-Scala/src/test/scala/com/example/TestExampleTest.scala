@@ -10,7 +10,9 @@ import org.scalatest.TryValues.convertTryToSuccessOrFailure
 import org.scalatest._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.funsuite.{AnyFunSuite, AsyncFunSuite}
+import org.scalatest.prop.TableDrivenPropertyChecks
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 
 import scala.collection.mutable
 import scala.util.Try
@@ -272,5 +274,14 @@ class authServiceTest extends AnyFunSuite {
     assert(!authService.authenticate(jane, password))
     verify(mockedUserRepository, never()).save(any[Long])
     verify(mockedUserRepository, times(1)).findByName(jane)
+  }
+}
+
+// TODO scalacheck必要？
+class StringLengthTest extends AnyFunSuite with ScalaCheckPropertyChecks {
+  test("a.length + b.length == (a + b).length") {
+    forAll { (a: String, b: String) =>
+      assert(a.length + b.length == (a + b).length)
+    }
   }
 }
