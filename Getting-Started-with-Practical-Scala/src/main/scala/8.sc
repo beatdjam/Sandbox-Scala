@@ -120,3 +120,72 @@ each(List(1, 2, 3)) { x => println(x) }
 // 部分適用
 val f = each(List(1, 2, 3)) _
 f { x => println(x * 2) }
+
+// η-expansion
+// 下記3つは処理としては等価
+// foreachにlistの値を処理する無名関数を渡している
+List(1, 2, 3, 4, 5).foreach(x => println(x))
+// printlnに「 _」を渡すとメソッドから関数に変換できる
+List(1, 2, 3, 4, 5).foreach(println _)
+// 「 _」を省略しても成り立つ式の場合はメソッド自体を渡しても同じように解釈される
+List(1, 2, 3, 4, 5).foreach(println)
+
+// 引数の名前渡し
+// 型名の前に=>をつけると利用時に評価される
+def if_[A](condition: Boolean)(thenClause: => A)(elseClause: => A): A = {
+  if (condition) thenClause else elseClause
+}
+
+val n = 3
+if_(n % 2 == 1) {
+  println("奇数")
+} {
+  println("偶数")
+}
+
+// 抽出子
+object Positive {
+  def unapply(n: Int): Option[Int] = if (n > 0) Some(n) else None
+}
+
+1 match {
+  case Positive(x) =>
+    println(s"$x is Positive")
+  case x =>
+    println(s"$x is Negative")
+}
+
+-1 match {
+  case Positive(x) =>
+    println(s"$x is Positive")
+  case x =>
+    println(s"$x is Negative")
+}
+
+// implicitの探索範囲
+trait Adder[T] {
+  def zero: T
+
+  def plus(x: T, y: T): T
+}
+
+object Adder {
+  implicit object IntAdder extends Adder[Int] {
+    def zero: Int = 0
+
+    def plus(x: Int, y: Int): Int = x + y
+  }
+
+  implicit object StringAdder extends Adder[String] {
+    def zero: String = ""
+
+    def plus(x: String, y: String): String = x + y
+  }
+}
+
+def sum[T](list: List[T])(implicit adder: Adder[T]): T = list.foldLeft(adder.zero) {
+  (x, y) => adder.plus(x, y)
+}
+
+sum(List(1, 2, 3))
+sum(List("A", "B", "C"))
