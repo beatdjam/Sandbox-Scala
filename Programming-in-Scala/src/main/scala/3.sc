@@ -1,3 +1,5 @@
+
+
 // 3.1 配列の型のパラメーター化
 // valは変数の再代入は行えないが、変数が参照するオブジェクトは可変な場合もある(ミュータブルなオブジェクトなど)
 val greetStrings = new Array[String](3)
@@ -74,3 +76,27 @@ val romanNumeral = Map(
 // 明確な理由が有るときに限り命令形で書く、というスタンスであるべき
 // 命令形でミュータブルな値を使うときはスコープを狭くして影響を最小限にする
 
+// 3.6 ファイルの行の読み出し方
+
+val lines = List(
+  "サンプル",
+  "// 3.5 関数型のスタイルの見分け方",
+  "// 関数型のスタイルに近づけるためには、イミュータブルな値を使い、副作用を抑える",
+  "// とはいえ、命令形のスタイルが適している場面もある",
+  "// 明確な理由が有るときに限り命令形で書く、というスタンスであるべき",
+  "// 命令形でミュータブルな値を使うときはスコープを狭くして影響を最小限にする"
+)
+for (line <- lines) {
+  println(line.length + " " + line)
+}
+
+// パイプ文字を追加して数字を右揃えにする
+// 最大文字数を取得
+def widthOfLength(s: String) = s.length.toString.length
+
+val maxWidth = lines.map(widthOfLength).max
+for (line <- lines) {
+  val numSpaces = maxWidth - widthOfLength(line)
+  val padding = " " * numSpaces // 空白をnumSpaces文連結する
+  println(padding + line.length + " | " + line)
+}
