@@ -84,3 +84,35 @@ object P04 {
 
 ls.length
 P04.lengthRecursive(ls)
+
+object P05 {
+  def reverse[A](ls: List[A]): List[A] = {
+    @tailrec
+    def reverseR(result: List[A], ls: List[A]): List[A] = ls match {
+      case h :: tail => reverseR(h :: result, tail)
+      case Nil => result
+    }
+
+    reverseR(Nil, ls)
+  }
+}
+
+ls.reverse
+P05.reverse(ls)
+
+object P06 {
+  def isPalindrome[A](ls: List[A]): Boolean = {
+    @tailrec
+    def reverseR(result: List[A], ls: List[A]): List[A] = ls match {
+      case h :: tail => reverseR(h :: result, tail)
+      case Nil => result
+    }
+
+    val result = reverseR(Nil, ls)
+    ls == result
+  }
+}
+val palindromeList = List(1, 2, 3, 2, 1)
+palindromeList.reverse == palindromeList
+P06.isPalindrome(palindromeList)
+P06.isPalindrome(palindromeList :+ 3)
