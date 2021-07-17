@@ -13,6 +13,7 @@ object P01 {
   }
 }
 
+ls.last
 P01.last(ls)
 
 // P02
@@ -44,6 +45,7 @@ object P02 {
   }
 }
 
+ls.init.last
 P02.penultimate(ls)
 P02.lastNthRecursive(2, ls)
 P02.lastNthRecursive(6, ls)
@@ -64,6 +66,7 @@ object P03 {
   //  }
 }
 
+ls(2)
 P03.nthRecursive(2, ls)
 P03.nthRecursive(5, ls)
 
@@ -74,7 +77,10 @@ object P04 {
       case Nil => n
       case _ :: tail => lengthR(n + 1, tail)
     }
+
     lengthR(0, ls)
   }
 }
+
+ls.length
 P04.lengthRecursive(ls)
