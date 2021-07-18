@@ -112,7 +112,63 @@ object P06 {
     ls == result
   }
 }
+
 val palindromeList = List(1, 2, 3, 2, 1)
 palindromeList.reverse == palindromeList
 P06.isPalindrome(palindromeList)
 P06.isPalindrome(palindromeList :+ 3)
+
+object P07 {
+  // わからなくて答え見た
+  def flatten(ls: List[Any]): List[Any] = ls flatMap {
+    case ms: List[_] => flatten(ms)
+    case e => List(e)
+  }
+}
+// 組み込みのflattenは全部Traversableな要素じゃないと使えない？
+List(List(1, 2), List(3, 4), List(5, 6)).flatten
+
+P07.flatten(List(List(1, 1), 2, List(3, List(5, 8))))
+
+object P08 {
+  // 下記を書いたけど要件は重複の排除ではなくて、連続する重複の削除だった
+  // toSetは順番を保持しないことがついでにわかった
+  // def compress[A](ls: List[A]):List[A] = ls.toSet.toList
+
+  // 以下回答の写経
+  // 先頭の要素を取り出して、後続の配列から連続する同じ要素をdropしたものを再帰で渡す
+  // 末尾最適ではない
+  def compress[A](ls: List[A]): List[A] = ls match {
+    case Nil => Nil
+    case ::(h, tail) => h :: compress(tail.dropWhile(_ == h))
+  }
+
+  // 末尾最適
+  def compressTailRecursive[A](ls: List[A]): List[A] = {
+    @tailrec
+    def compressR(result: List[A], curList: List[A]): List[A] = curList match {
+      // 先頭の要素をresultの先頭に入れる(先頭に入れると要素の長さに関係なく処理時間が一定になる)
+      // tailの連続する同じ要素を取り除いたものをcurListで渡す
+      case h :: tail => compressR(h :: result, tail.dropWhile(_ == h))
+      // 最後までたどり着いたらListを逆転させて返す
+      case Nil => result.reverse
+    }
+
+    compressR(Nil, ls)
+  }
+
+  // Functional.
+  def compressFunctional[A](ls: List[A]): List[A] =
+    ls.foldRight(List[A]()) { (h, r) =>
+      //      println(h)
+      //      println(r)
+      // hは処理中の要素、rは畳み込まれているresult
+      // 結果が空のとき、または結果の先頭が異なる文字のときにリストに追加
+      // それ以外は結果のみを返している
+      if (r.isEmpty || r.head != h) h :: r
+      else r
+    }
+}
+
+P08.compress(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
+P08.compressFunctional(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
