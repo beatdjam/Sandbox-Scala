@@ -3,17 +3,17 @@ package controllers
 import models.Tables._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import play.api.mvc._
-import slick.jdbc.H2Profile.api._
 import slick.driver.JdbcProfile
+import slick.jdbc.H2Profile.api._
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext.Implicits.global // TODO あってるかわかってない
+import scala.concurrent.ExecutionContext
 
 // ・Playではコントローラはクラスとして実装します
 // ・@InjectはDIのためのアノテーションです
 // 国際化機能を使用するにはコントローラにMessagesControllerComponentsをDIし、MessagesAbstractControllerクラスを継承します
 // ・TODOメソッドはAction not implemented yet.という501 NOT_IMPLEMENTEDレスポンスを返します
-class UserController @Inject()(val dbConfigProvider: DatabaseConfigProvider, components: MessagesControllerComponents)
+class UserController @Inject()(implicit ec: ExecutionContext, val dbConfigProvider: DatabaseConfigProvider, components: MessagesControllerComponents)
   extends MessagesAbstractController(components) with HasDatabaseConfigProvider[JdbcProfile] {
 
   /**
