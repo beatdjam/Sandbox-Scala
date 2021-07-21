@@ -3,7 +3,7 @@ package controllers
 import models.Tables._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import play.api.mvc._
-import slick.driver.H2Driver.api._ // TODO deprecated解消
+import slick.jdbc.H2Profile.api._
 import slick.driver.JdbcProfile
 
 import javax.inject.Inject
@@ -19,7 +19,7 @@ class UserController @Inject()(val dbConfigProvider: DatabaseConfigProvider, com
   /**
    * 一覧表示
    */
-  def list = Action.async { implicit rs =>
+  def list: Action[AnyContent] = Action.async { implicit rs =>
     // IDの昇順にすべてのユーザ情報を取得
     db.run(Users.sortBy(t => t.id).result).map { users =>
       // 一覧画面を表示
