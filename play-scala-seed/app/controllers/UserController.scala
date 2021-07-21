@@ -1,24 +1,31 @@
 package controllers
 
-import play.api.db.slick._
+import models.Tables._
+import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import play.api.mvc._
-import play.mvc.Controller
-import slick.jdbc.JdbcProfile
+import slick.driver.H2Driver.api._ // TODO deprecated解消
+import slick.driver.JdbcProfile
 
 import javax.inject.Inject
-
+import scala.concurrent.ExecutionContext.Implicits.global // TODO あってるかわかってない
 
 // ・Playではコントローラはクラスとして実装します
 // ・@InjectはDIのためのアノテーションです
 // 国際化機能を使用するにはコントローラにMessagesControllerComponentsをDIし、MessagesAbstractControllerクラスを継承します
 // ・TODOメソッドはAction not implemented yet.という501 NOT_IMPLEMENTEDレスポンスを返します
-class UserController @Inject()(components: MessagesControllerComponents)
-  extends MessagesAbstractController(components) {
+class UserController @Inject()(val dbConfigProvider: DatabaseConfigProvider, components: MessagesControllerComponents)
+  extends MessagesAbstractController(components) with HasDatabaseConfigProvider[JdbcProfile] {
 
   /**
    * 一覧表示
    */
-  def list = TODO
+  def list = Action.async { implicit rs =>
+    // IDの昇順にすべてのユーザ情報を取得
+    db.run(Users.sortBy(t => t.id).result).map { users =>
+      // 一覧画面を表示
+      Ok(views.html.users.list(users))
+    }
+  }
 
   /**
    * 編集画面表示
