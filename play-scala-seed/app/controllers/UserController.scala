@@ -26,7 +26,7 @@ class UserController @Inject()(implicit ec: ExecutionContext, val dbConfigProvid
   // 一覧画面を表示
   def list: Action[AnyContent] = Action.async { implicit rs =>
     db.run(Users.sortBy(t => t.id).result)
-      .map { users => Ok(views.html.users.list(users)) }
+      .map(users => Ok(views.html.users.list(users)))
   }
 
   /**
@@ -38,13 +38,13 @@ class UserController @Inject()(implicit ec: ExecutionContext, val dbConfigProvid
       // IDからユーザ情報を1件取得
       // 値をフォームに詰める
       db.run(Users.filter(t => t.id === id.get.bind).result.head)
-        .map { user => userForm.fill(UserForm(Some(user.id), user.name, user.companyId)) }
+        .map(user => userForm.fill(UserForm(Some(user.id), user.name, user.companyId)))
     } else Future(userForm) // リクエストパラメータにIDが存在しない場合
 
     // 会社一覧を取得
     form.flatMap { form =>
       db.run(Companies.sortBy(_.id).result)
-        .map { companies => Ok(views.html.users.edit(form, companies)) }
+        .map(companies => Ok(views.html.users.edit(form, companies)))
     }
   }
 
@@ -57,7 +57,7 @@ class UserController @Inject()(implicit ec: ExecutionContext, val dbConfigProvid
       // エラーの場合
       error => {
         db.run(Companies.sortBy(t => t.id).result)
-          .map { companies => BadRequest(views.html.users.edit(error, companies)) }
+          .map(companies => BadRequest(views.html.users.edit(error, companies)))
       },
       // OKの場合
       form => {
@@ -73,20 +73,20 @@ class UserController @Inject()(implicit ec: ExecutionContext, val dbConfigProvid
   /**
    * 更新実行
    */
-  def update = Action.async { implicit rs =>
+  def update: Action[AnyContent] = Action.async { implicit rs =>
     // リクエストの内容をバインド
     userForm.bindFromRequest.fold(
       // エラーの場合は登録画面に戻す
       error => {
         db.run(Companies.sortBy(t => t.id).result)
-          .map { companies => BadRequest(views.html.users.edit(error, companies)) }
+          .map(companies => BadRequest(views.html.users.edit(error, companies)))
       },
       form => {
         // OKの場合は登録を行い一覧画面にリダイレクトする
         // ユーザ情報を更新
         val user = UsersRow(form.id.get, form.name, form.companyId)
         db.run(Users.filter(t => t.id === user.id.bind).update(user))
-          .map { _ => Redirect(routes.UserController.list) } // 一覧画面にリダイレクト
+          .map(_ => Redirect(routes.UserController.list)) // 一覧画面にリダイレクト
       }
     )
   }
@@ -94,7 +94,11 @@ class UserController @Inject()(implicit ec: ExecutionContext, val dbConfigProvid
   /**
    * 削除実行
    */
-  def remove(id: Long) = TODO
+  def remove(id: Long): Action[AnyContent] = Action.async { implicit rs =>
+    // ユーザを削除
+    db.run(Users.filter(t => t.id === id.bind).delete)
+      .map(_ => Redirect(routes.UserController.list)) // 一覧画面へリダイレクト
+  }
 
 }
 
@@ -103,7 +107,7 @@ object UserController {
   case class UserForm(id: Option[Long], name: String, companyId: Option[Int])
 
   // formから送信されたデータ ⇔ ケースクラスの変換を行う
-  val userForm = Form(
+  val userForm: Form[UserForm] = Form(
     mapping(
       "id" -> optional(longNumber),
       "name" -> nonEmptyText(maxLength = 20),
