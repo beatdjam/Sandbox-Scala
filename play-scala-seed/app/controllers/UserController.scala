@@ -51,12 +51,45 @@ class UserController @Inject()(implicit ec: ExecutionContext, val dbConfigProvid
   /**
    * 登録実行
    */
-  def create = TODO
+  def create: Action[AnyContent] = Action.async { implicit rs =>
+    // リクエストの内容をバインド
+    userForm.bindFromRequest.fold(
+      // エラーの場合
+      error => {
+        db.run(Companies.sortBy(t => t.id).result)
+          .map { companies => BadRequest(views.html.users.edit(error, companies)) }
+      },
+      // OKの場合
+      form => {
+        // ユーザを登録
+        val user = UsersRow(0, form.name, form.companyId)
+        // 一覧画面へリダイレクト
+        db.run(Users += user)
+          .map(_ => Redirect(routes.UserController.list))
+      }
+    )
+  }
 
   /**
    * 更新実行
    */
-  def update = TODO
+  def update = Action.async { implicit rs =>
+    // リクエストの内容をバインド
+    userForm.bindFromRequest.fold(
+      // エラーの場合は登録画面に戻す
+      error => {
+        db.run(Companies.sortBy(t => t.id).result)
+          .map { companies => BadRequest(views.html.users.edit(error, companies)) }
+      },
+      form => {
+        // OKの場合は登録を行い一覧画面にリダイレクトする
+        // ユーザ情報を更新
+        val user = UsersRow(form.id.get, form.name, form.companyId)
+        db.run(Users.filter(t => t.id === user.id.bind).update(user))
+          .map { _ => Redirect(routes.UserController.list) } // 一覧画面にリダイレクト
+      }
+    )
+  }
 
   /**
    * 削除実行
