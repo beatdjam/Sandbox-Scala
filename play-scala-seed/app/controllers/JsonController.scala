@@ -62,7 +62,12 @@ class JsonController @Inject()(implicit ec: ExecutionContext, val dbConfigProvid
   /**
    * ユーザ削除
    */
-  def remove(id: Long): Action[AnyContent] = TODO
+  def remove(id: Long): Action[AnyContent] = Action.async { implicit rs =>
+    // ユーザを削除
+    db.run(Users.filter(t => t.id === id.bind).delete).map { _ =>
+      Ok(Json.obj("result" -> "success"))
+    }
+  }
 }
 
 object JsonController {
