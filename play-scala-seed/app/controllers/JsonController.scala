@@ -5,13 +5,13 @@ import models.Tables
 import models.Tables._
 import play.api.db.slick._
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
-import play.api.libs.json.{Json, OWrites, __}
+import play.api.libs.json._
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents}
 import slick.jdbc.H2Profile.api._
 import slick.jdbc.JdbcProfile
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 
 class JsonController @Inject()(implicit ec: ExecutionContext, val dbConfigProvider: DatabaseConfigProvider, cc: ControllerComponents)
@@ -29,20 +29,52 @@ class JsonController @Inject()(implicit ec: ExecutionContext, val dbConfigProvid
   /**
    * ユーザ登録
    */
-  def create = TODO
+  def create: Action[JsValue] = Action.async(parse.json) { implicit rs =>
+    rs.body.validate[UserForm].map { form =>
+      // OKの場合はユーザを登録
+      val user = UsersRow(0, form.name, form.companyId)
+      db.run(Users += user)
+        .map { _ => Ok(Json.obj("result" -> "success")) }
+    }.recoverTotal { e =>
+      // NGの場合はバリデーションエラーを返す
+      Future(BadRequest(Json.obj("result" -> "failure", "error" -> JsError.toJson(e))))
+    }
+  }
 
   /**
    * ユーザ更新
    */
-  def update = TODO
+  def update: Action[JsValue] = Action.async(parse.json) { implicit rs =>
+    rs.body.validate[UserForm].map { form =>
+      // OKの場合はユーザ情報を更新
+      val user = UsersRow(form.id.get, form.name, form.companyId)
+      db.run(Users.filter(t => t.id === user.id.bind)
+        .update(user))
+        .map { _ => Ok(Json.obj("result" -> "success")) }
+    }.recoverTotal { e =>
+      // NGの場合はバリデーションエラーを返す
+      Future {
+        BadRequest(Json.obj("result" -> "failure", "error" -> JsError.toJson(e)))
+      }
+    }
+  }
 
   /**
    * ユーザ削除
    */
-  def remove(id: Long) = TODO
+  def remove(id: Long): Action[AnyContent] = TODO
 }
 
 object JsonController {
+  case class UserForm(id: Option[Long], name: String, companyId: Option[Int])
+
+  // JSONをUserFormに変換するためのReadsを定義
+  implicit val userFormFormat: Reads[UserForm] = (
+    (__ \ "id").readNullable[Long] and
+      (__ \ "name").read[String] and
+      (__ \ "companyId").readNullable[Int]
+    ) (UserForm)
+
   // UsersRowをJSONに変換するためのWritesを定義
   implicit val usersRowWritesWrites: OWrites[Tables.UsersRow] = (
     (__ \ "id").write[Long] and
