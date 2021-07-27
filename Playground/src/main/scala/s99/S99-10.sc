@@ -172,3 +172,15 @@ object P08 {
 
 P08.compress(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
 P08.compressFunctional(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
+
+object P09 {
+  // 自力で思いついた実装
+  // tailの操作をどうにかしたい
+  @tailrec
+  def pack[A](curList: List[A], result: List[List[A]] = Nil): List[List[A]] = curList match {
+    case h :: tail => pack( tail.dropWhile(_ == h),(h :: tail.takeWhile(_ == h)) :: result)
+    case Nil => result.reverse
+  }
+}
+
+P09.pack(List('a, 'a, 'a, 'a, 'b, 'c, 'c, 'a, 'a, 'd, 'e, 'e, 'e, 'e))
