@@ -1,12 +1,15 @@
-case class FullName private (firstName: String, lastName: String)
-object FullName {
-  def apply(firstName: String, lastName: String): FullName = {
-    if (firstName.isEmpty || lastName.isEmpty) {
-      throw new IllegalArgumentException("だめだよ")
-    }
-    new FullName(firstName, lastName)
-  }
+case class FullName private (firstName: String, lastName: String) {
+  require(firstName.nonEmpty && lastName.nonEmpty, "だめだよ")
 }
+// コンパニオンオブジェクトでやるならこう
+//object FullName {
+//  def apply(firstName: String, lastName: String): FullName = {
+//    if (firstName.isEmpty || lastName.isEmpty) {
+//      throw new IllegalArgumentException("だめだよ")
+//    }
+//    new FullName(firstName, lastName)
+//  }
+//}
 
 case class Money(amount: BigDecimal, currency: String) {
   def add(arg: Money): Money = {
