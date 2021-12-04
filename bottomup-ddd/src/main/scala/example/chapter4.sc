@@ -1,15 +1,14 @@
+import scala.collection.mutable
+
+// chapter3のコード
 case class UserId(value: String)
 
 case class User(id: UserId, name: String) {
   require(name.nonEmpty)
-
-  // 属性の変更ができる
   def changeName(name: String): User = {
     this.copy(name = name)
   }
 
-  // 識別子で同一性を表現する
-  // Entityのequalsをオーバーライドするのは否定意見もあったけどどうなんだろう
   override def equals(obj: Any): Boolean =
     obj match {
       case User(id, _) => id.value == this.id.value
@@ -19,7 +18,11 @@ case class User(id: UserId, name: String) {
   override def hashCode = (id, name).##
 }
 
-// 名前を変えても同一性が維持されてる
-val id = UserId("1")
-val user = User(id, "one")
-user == user.changeName("two")
+// ドメインオブジェクト自身が持つと不自然になってしまう振る舞いを切り出すService
+// →ドメインサービス
+class UserService {
+  def exists(user: User): Boolean = {
+    // ここに存在確認の処理が入る
+    false
+  }
+}
