@@ -20,7 +20,9 @@ case class User(id: UserId, name: UserName) {
 
 trait UserRepository {
   def save(user: User): Boolean
+  def delete(user: User): Boolean
   def find(id: UserId): Option[User]
+  def findByUserName(name: UserName): Seq[User]
 }
 
 class UserRepositoryImpl() extends UserRepository {
@@ -28,8 +30,16 @@ class UserRepositoryImpl() extends UserRepository {
     // 保存の実処理
     ???
   }
+  def delete(user: User): Boolean = {
+    // ここに削除の処理がはいる
+    ???
+  }
   def find(id: UserId): Option[User] = {
     // ここに存在確認の処理が入る
+    ???
+  }
+  def findByUserName(name: UserName): Seq[User] = {
+    // ユーザー名で検索する
     ???
   }
 }
