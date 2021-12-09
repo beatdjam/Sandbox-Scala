@@ -4,10 +4,10 @@ case class UserName(value: String) {
 case class UserId(value: String)
 
 case class User(id: UserId, name: UserName) {
-  def this(name: UserName) = {
-    require(name.value.nonEmpty)
-    User(UserId(java.util.UUID.randomUUID.toString), name)
-  }
+  require(this.name.value.nonEmpty)
+
+  def this(name: UserName) =
+    this(UserId(java.util.UUID.randomUUID.toString), name)
 
   def changeName(name: UserName): User = {
     this.copy(name = name)
@@ -30,7 +30,13 @@ trait UserRepository {
 }
 
 class UserService(private val userRepository: UserRepository) {
-  def exists(user: User): Boolean = userRepository.findByUserName(user.name).nonEmpty
+  def exists(user: User): Boolean =
+    userRepository.findByUserName(user.name).nonEmpty
+}
+
+case class UserData(private val user: User) {
+  val id: String = user.id.value
+  val name: String = user.name.value
 }
 
 class UserApplicationService(
@@ -47,8 +53,26 @@ class UserApplicationService(
   }
 
   // ドメインオブジェクトを公開する作りの場合
-  def get(userId: String): Option[User] = {
-    val targetId = UserId(userId)
-    userRepository.find(targetId)
+  //  def get(userId: String): Option[User] = {
+  //    val targetId = UserId(userId)
+  //    userRepository.find(targetId)
+  //  }
+
+  // DTOを介してドメインオブジェクトを公開しない場合
+  def get(id: String): Option[UserData] = {
+    val userOpt = userRepository.find(UserId(id))
+    userOpt.map(user => UserData(user))
+  }
+
+  def update(id: String, name: String) = {
+    val userOpt = userRepository.find(UserId(id))
+    userOpt.map { user =>
+      user.changeName(UserName(name))
+      if (userService.exists(user)) {
+        // 適当なException
+        throw new Exception("重複エラー")
+      }
+      userRepository.save(user)
+    }
   }
 }
