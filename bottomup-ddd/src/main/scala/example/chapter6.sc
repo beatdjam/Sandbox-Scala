@@ -34,10 +34,14 @@ class UserService(private val userRepository: UserRepository) {
     userRepository.findByUserName(user.name).nonEmpty
 }
 
+// DTO
 case class UserData(private val user: User) {
   val id: String = user.id.value
   val name: String = user.name.value
 }
+
+// Command
+case class UserUpdateCommand(id: UserId, name: Option[UserName])
 
 class UserApplicationService(
     private val userRepository: UserRepository,
@@ -64,15 +68,36 @@ class UserApplicationService(
     userOpt.map(user => UserData(user))
   }
 
-  def update(id: String, name: String) = {
-    val userOpt = userRepository.find(UserId(id))
+  // 直接引数で渡す場合
+  //  def update(id: String, name: String) = {
+  //    val userOpt = userRepository.find(UserId(id))
+  //    userOpt.map { user =>
+  //      user.changeName(UserName(name))
+  //      if (userService.exists(user)) {
+  //        // 適当なException
+  //        throw new Exception("重複エラー")
+  //      }
+  //      userRepository.save(user)
+  //    }
+  //  }
+
+  // Commandオブジェクトで渡す場合
+  // 実装がいまいちな気がするけどいい感じにならない
+  def update(command: UserUpdateCommand) = {
+    val userOpt = userRepository.find(UserId(command.id.value))
     userOpt.map { user =>
-      user.changeName(UserName(name))
-      if (userService.exists(user)) {
-        // 適当なException
-        throw new Exception("重複エラー")
+      val newUser = command match {
+        case UserUpdateCommand(_, Some(name)) => {
+          val newUser = user.changeName(UserName(name.value))
+          if (userService.exists(user)) {
+            // 適当なException
+            throw new Exception("重複エラー")
+          } else newUser
+        }
+        case _ => user
       }
-      userRepository.save(user)
+
+      userRepository.save(newUser)
     }
   }
 }
