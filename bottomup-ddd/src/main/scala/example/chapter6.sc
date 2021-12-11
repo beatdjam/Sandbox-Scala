@@ -42,6 +42,7 @@ case class UserData(private val user: User) {
 
 // Command
 case class UserUpdateCommand(id: UserId, name: Option[UserName])
+case class UserDeleteCommand(id: UserId)
 
 class UserApplicationService(
     private val userRepository: UserRepository,
@@ -87,17 +88,22 @@ class UserApplicationService(
     val userOpt = userRepository.find(UserId(command.id.value))
     userOpt.map { user =>
       val newUser = command match {
-        case UserUpdateCommand(_, Some(name)) => {
+        case UserUpdateCommand(_, Some(name)) =>
           val newUser = user.changeName(UserName(name.value))
+          // 重複確認はドメインサービスで行うとベター
           if (userService.exists(user)) {
             // 適当なException
             throw new Exception("重複エラー")
           } else newUser
-        }
         case _ => user
       }
 
       userRepository.save(newUser)
     }
+  }
+
+  def delete(command: UserDeleteCommand) = {
+    val userOpt = userRepository.find(UserId(command.id.value))
+    userOpt.map(userRepository.delete)
   }
 }
