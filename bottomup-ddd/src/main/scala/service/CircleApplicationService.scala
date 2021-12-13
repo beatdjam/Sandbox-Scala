@@ -10,7 +10,7 @@ class CircleApplicationService(
     circleService: CircleService,
     userRepository: UserRepository
 ) {
-  // 本来はTransaction管理入れる
+  // 本来は一連の処理をスコープにしたTransaction管理入れる
   def create(ownerId: UserId, name: CircleName): Unit = {
     val owner =
       userRepository
@@ -33,9 +33,10 @@ class CircleApplicationService(
       .find(circleId)
       .getOrElse(throw new IllegalArgumentException("circle is not found"))
 
-    require(circle.members.size >= 29, "circle is full")
-
-    val joinedCircle = circle.copy(members = circle.members.appended(member))
+    // このチェックがあり、Serviceでmemberの値を追加しているのは集約が破れている
+    // require(circle.members.size < 29, "circle is full")
+    // val joinedCircle = circle.copy(members = circle.members.appended(member))
+    val joinedCircle = circle.join(member)
     circleRepository.save(joinedCircle)
   }
 }
