@@ -1,6 +1,6 @@
 package domain.circle
 
-import domain.user.{User, UserId}
+import domain.user.UserId
 
 case class Circle(
     private val id: Option[CircleId] = None,
@@ -9,7 +9,7 @@ case class Circle(
     owner: UserId,
     //    owner: User,
     // private val members: Seq[User] = Nil
-    private val members: Seq[UserId] = Nil
+    members: Seq[UserId] = Nil
 ) {
   def join(member: UserId): Circle = {
     // owner含めて30人のルールはCircle集約の制約なので

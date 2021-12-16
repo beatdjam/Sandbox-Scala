@@ -37,6 +37,12 @@ class CircleApplicationService(
     // require(circle.members.size < 29, "circle is full")
     // val joinedCircle = circle.copy(members = circle.members.appended(member))
     val joinedCircle = circle.join(member.id)
+
+    // Specificationパターンを利用した場合
+    // 仕様を満たすかを判定するオブジェクトに判定処理を逃している
+    // val domain.circle.specification = new CircleFullSpecification(userRepository)
+    // if (domain.circle.specification.isSatisfiedBy(circle))
+
     circleRepository.save(joinedCircle)
   }
 }

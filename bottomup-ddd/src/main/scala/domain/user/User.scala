@@ -1,6 +1,6 @@
 package domain.user
 
-case class User(id: UserId, name: UserName) {
+case class User(id: UserId, name: UserName, isPremium: Boolean = false) {
   require(this.name.value.nonEmpty)
 
   def changeName(name: UserName): User = {
