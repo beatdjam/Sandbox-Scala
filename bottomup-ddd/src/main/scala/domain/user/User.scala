@@ -9,8 +9,8 @@ case class User(id: UserId, name: UserName, isPremium: Boolean = false) {
 
   override def equals(obj: Any): Boolean =
     obj match {
-      case User(id, _) => id.value == this.id.value
-      case _           => false
+      case User(id, _, _) => id.value == this.id.value
+      case _              => false
     }
 
   override def hashCode: Int = (id, name).##

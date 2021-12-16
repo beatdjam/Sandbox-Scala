@@ -16,6 +16,7 @@ case class Circle(
     require(!isFull, "circle is full")
     this.copy(members = members.appended(member))
   }
+  // isFullの条件がより複雑になった場合、Specificationオブジェクトなどに流す
   def isFull: Boolean = countMembers >= 29
   def countMembers: Int = members.size + 1
 }
