@@ -1,4 +1,5 @@
 import scala.annotation.tailrec
+import scala.language.implicitConversions
 // 6 関数型スタイルのオブジェクト
 
 // 6.1 Rationalクラスの仕様
@@ -54,6 +55,16 @@ import scala.annotation.tailrec
 // 6.11 メソッドの多重定義
 // Javaのオーバーロードと同じ
 
+// 6.12 暗黙の型変換
+// 暗黙で呼び出される変換メソッドを定義することで、作成したクラスに対する演算を適用させることができる
+// implicit conversionは参照できるスコープにある必要がある
+
+// 6.13 演算子メソッドと暗黙の型変換
+// 暗黙の型変換や演算子の定義はユーザーから実処理を隠蔽する。
+// 簡潔さ=読みやすさで無いことに注意して利用する
+
+// 6.14 まとめ
+
 class Rational(n: Int, d: Int) {
   require(d != 0) // 分母が0は不正
 
@@ -96,4 +107,8 @@ class Rational(n: Int, d: Int) {
   private def gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
 }
 
+implicit def intToRational(x: Int): Rational = new Rational(x)
+
 new Rational(1, 2)
+val r = new Rational(2, 3)
+2 * r
