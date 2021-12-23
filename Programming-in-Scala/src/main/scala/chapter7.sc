@@ -128,3 +128,38 @@ val list = (1 to 20).map {
 // 7.6 breakとcontinueを使わないコーディング
 // breakableブロックでくくると使える
 // 基本は使わないで済む構文になってる
+
+// 7.7 変数のスコープ
+// Javaとほとんど変わらないけど、ネストされたスコープで同じ名前の変数を定義できる
+
+//
+def printMultiTable(): Unit ={
+  // i
+  var i = 1
+  while (i <= 10) {
+    // i, j
+    var j = 1
+    while (j <= 10) {
+      // i, j, prod, k
+      val prod = (i * j).toString
+      var k = prod.length
+      while (k < 4) {
+        print(" ")
+        k += 1
+      }
+      print(prod)
+      j += 1
+    }
+    // i, j
+    println()
+    i += 1
+  }
+  // i
+}
+
+val a = 1;
+{
+  val a = 2
+  println(a)
+}
+println(a)
