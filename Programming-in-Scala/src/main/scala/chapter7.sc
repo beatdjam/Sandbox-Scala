@@ -156,6 +156,7 @@ def printMultiTable(): Unit ={
   }
   // i
 }
+printMultiTable()
 
 val a = 1;
 {
@@ -163,3 +164,22 @@ val a = 1;
   println(a)
 }
 println(a)
+
+// 7.8 命令形スタイルのコードのリファクタリング
+def makeRowSeq(row: Int) =
+  for (col <- 1 to 10) yield {
+    val prod = (row * col).toString
+    val padding = " " * (4 - prod.length)
+    padding + prod
+  }
+
+def makeRow(row: Int) = makeRowSeq(row).mkString
+
+def multiTable() = {
+  val tableSeq = for(row <- 1 to 10) yield makeRow(row)
+  tableSeq.mkString("\n")
+}
+
+println(multiTable())
+
+// 7.9 まとめ
