@@ -42,3 +42,22 @@ val increase = (x: Int) => {
 
 // foreachのように引数として関数を受け取りそれを実行するようなものがある
 (1 to 5).foreach(increase)
+
+// 8.4 関数リテラルの短縮形
+val someNumbers = Seq(-11, -10, -5, 0, 5, 10)
+someNumbers.filter((x: Int) => x > 0)
+// xの型がIntであることはsomeNumbersがSeq[Int]であることから自明なので省略できる
+// 型が推論できるパラメータは括弧も省略できる
+// => ターゲットによる型付け
+someNumbers.filter(x => x > 0)
+
+// 8.5 プレースホルダー構文
+// 式の中で一度しか使われない「埋めるべき空白」は_で表現することができる
+// _を書くとCollectionの各要素が割り当てられて処理される
+someNumbers.filter(_ > 0)
+
+// 下記は(Int, Int) => Intとして解釈される
+// つまり、出現した_はそれぞれ別のパラメータとして認識されている
+val f = (_: Int) + (_: Int)
+
+// 8.6 部分適用された関数
