@@ -61,3 +61,12 @@ someNumbers.filter(_ > 0)
 val f = (_: Int) + (_: Int)
 
 // 8.6 部分適用された関数
+// _は個別のパラメーターだけでなく、パラメーターリスト全体に用いることもできる
+def sum(a: Int, b: Int, c: Int): Int = a + b + c
+val a = sum _ // (Int, Int, Int) => Intになる
+a(1, 2, 3) // これは6になる
+val b = sum(1, _: Int, 3) // Int(bの空白部分)を受け取る部分適用関数式になる
+b(2) // => 6
+
+// すべてのパラメータが渡される場合、_も省略することができる
+someNumbers.foreach(println)
