@@ -1,3 +1,4 @@
+import scala.annotation.tailrec
 import scala.io.Source
 // 8 関数とクロージャー
 
@@ -96,3 +97,43 @@ val inc1 = makeIncreaser(1)
 val inc9999 = makeIncreaser(9999)
 inc1(10)
 inc9999(10)
+
+// 8.8 関数呼び出しの特殊な形態
+// 8.8.1 連続パラメーター
+// 関数の最後のパラメーターが可変長で有ることを表現できる
+def echo(args: String*): Unit = for (arg <- args) println(arg)
+echo("hoge")
+echo("hoge", "fuga")
+echo("hoge", "fuga", "hogefuga")
+
+// コレクションを渡す場合
+// 実際の処理は1要素ずつ渡した形になる
+echo(Seq("hoge", "fuga", "hogefuga") : _*)
+
+// 8.8.2 名前付き引数
+// 引数の順番に関係なく引数の名前を指定して値を渡すことができる
+// 後述のパラメーターのデフォルト値と合わせて利用されることが多い
+def speed(distance: Float, time: Float): Float = distance / time
+speed(distance = 100, time = 10)
+speed(time = 10, distance = 100)
+
+// 8.8.3 パラメーターのデフォルト値
+// パラメーターにデフォルト値がある時、その値を渡さなくても関数を呼び出すことができる
+// 名前付き引数と組み合わせて、必要な引数のみに値を渡すような形で利用できる
+def defaultValueSample(default1: String = "default1", default2: String = "default2"): Unit
+= println(s"$default1 + $default2")
+defaultValueSample() // default1 + default2
+defaultValueSample(default2 = "sample") // default1 + sample
+
+// 8.9 末尾再帰
+// 関数の最後に自分自身を呼び出す再帰関数を末尾再帰という
+// 末尾再帰のコードに対してScalaコンパイラは内部的に命令形スタイルのコードに置き換え最適化を行う
+@tailrec
+def gcd(x: Long, y: Long): Long = if(y == 0) x else gcd(y, x % y)
+
+// 8.9.1 末尾再帰をトレースする
+
+// 8.9.2 末尾再帰の限界
+// JVM上で再現できる末尾再帰には限界があり、自分自身を呼び出す単純な末尾再帰しか最適化できない
+
+// まとめ
