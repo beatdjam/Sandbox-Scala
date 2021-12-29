@@ -24,3 +24,21 @@ object FileMatcher {
 // _.endsWith(_) は _ に対応する引数を受け付けてendWithの結果を返す関数として解釈される
 // arg1.endWith(arg2)のように読み替えられる
 // 更なる簡略化として_.endsWith(query) : String => Booleanのようにして、matcherのみを引数とした関数に変更できる
+
+// 9.2 クライアントコードの単純化
+// 引数の条件に応じた値を走査するループ処理を言語のAPIとして公開することで、コードの重複が削減されている
+def containsNeg(nums: Seq[Int]): Boolean = nums.exists(_ < 0)
+def containsOdd(nums: Seq[Int]): Boolean = nums.exists(_ % 2 == 1)
+
+// 9.3 カリー化
+// 非カリー化関数
+def plainOldSum(x: Int, y: Int) = x + y
+def curriedSum(x: Int)(y: Int) = x + y
+// => def first(x: Int) = (y: Int) => x + y と分解できる
+
+// curriedSum(1)(2)とfirst(2)は実行結果が等価
+curriedSum(1)(2)
+val first = curriedSum(1)_
+first(2)
+
+// 9.4 新しい制御構造を作る
