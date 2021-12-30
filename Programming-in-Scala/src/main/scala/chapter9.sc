@@ -1,4 +1,5 @@
-import java.io.File
+import java.io.{File, PrintWriter}
+import java.util.Date
 
 // 9 制御構造の抽象化
 // 9.1 コード重複の削減
@@ -42,3 +43,61 @@ val first = curriedSum(1)_
 first(2)
 
 // 9.4 新しい制御構造を作る
+
+// リソースをオープン -> 操作 -> クローズする制御構造
+// このように、制御構造を持つ関数の中でリソースを生成して引数の値に利用させるパターンを「ローンパターン」という
+// ローンパターンはリソースの生成からクローズまでの責任を持ち、外側は責任を持つ必要がない
+def withPrintWriter(file: File, op: PrintWriter => Unit): Unit = {
+  val writer = new PrintWriter(file)
+  try {
+    op(writer)
+  } finally {
+    writer.close()
+  }
+}
+// これで呼び出せる
+// withPrintWriter(
+//   new File("date.txt"),
+//   writer => writer.println(new Date)
+// )
+
+// Scalaでは引数を1個渡すメソッドは中括弧で囲むことができる
+// println { "Text" } とか
+def withPrintWriter(file: File)(op: PrintWriter => Unit): Unit = {
+  val writer = new PrintWriter(file)
+  try {
+    op(writer)
+  } finally {
+    writer.close()
+  }
+}
+
+// カリー化で引数を分割することで第2引数が切り出せるため、より制御構造らしく扱うことができる
+// withPrintWriter(new File("date.txt")) { writer =>
+//   writer.println(new Date)
+// }
+
+// 9.5 名前渡しパラメータ
+// 中括弧の中のコードに値を渡さないifやwhileに近い制御構造を作るための仕組みとしての名前渡しパラメーター
+var assertionsEnabled = true
+def myAssert(predicate: () => Boolean): Unit =
+  if (assertionsEnabled && !predicate()) throw new AssertionError
+// この定義だと呼び出し時に myAssert(() => 5 > 3) のように呼び出す必要がある
+
+// 空パラメーターを省略して　=> にすることで名前渡しパラメーターにできる
+def byNameAssert(predicate: => Boolean): Unit =
+  if (assertionsEnabled && !predicate) throw new AssertionError
+// byNameAssert(5 > 3) のように自然な形で呼び出せる
+
+// 下記のように書くこともできるが、byNameAssertとは意味合いが変わる
+def boolAssert(predicate: Boolean): Unit =
+  if (assertionsEnabled && !predicate) throw new AssertionError
+
+assertionsEnabled = false
+// boolAssertは引数がBooleanなので、渡す前に評価される
+// boolAssert(5 / 0 == 0) // 実行するとzero divideのエラーが出る
+
+// byNameAssertは引数に渡した値を評価する関数値が渡されるので、副作用が起きない
+byNameAssert(5 / 0 == 0) // エラーが出ない
+
+// 9.6 まとめ
