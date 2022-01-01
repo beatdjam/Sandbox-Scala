@@ -82,22 +82,75 @@ val ae : ArrayElement = new ArrayElement(Array("Hello", "World"))
 val e2: Element = ae
 val e3: Element = new UniformElement('x', 2, 3)
 
+// 呼び出される実装は変数や式の型ではなく実行時のオブジェクトの型になる
+// これを動的束縛と呼ぶ
 abstract class Sample {
-  def demo() = {
-    println("Sample's implementation invoked")
-  }
+  def demo(): Unit = println("Sample's implementation invoked")
 }
 
 class Sample1 extends Sample {
-  override def demo() = {
-    println("Sample1's implementation invoked")
-  }
+  override def demo(): Unit = println("Sample1's implementation invoked")
 }
 
 class Sample2 extends Sample
 
-def invokeDemo(e: Sample) = {
-  e.demo()
+def invokeDemo(e: Sample): Unit = e.demo()
+
+// 引数の型に関わらず、渡されたオブジェクトの型で実行されてることがわかる
+invokeDemo(new Sample1) // Sample1's implementation invoked
+invokeDemo(new Sample2) // Sample's implementation invoked
+
+// 10.10 finalメンバーの実装
+// final修飾子のついたメンバーはサブクラスでoverrideできない
+// 同様にfinal修飾子のついたクラスはサブクラス化することができない
+
+// 10.11 合成か継承か
+// is-a関係の場合は継承を、コードの再利用が目的なら合成を選択するのがよい
+// クライアントがスーパークラス型として利用したいかもそのサブクラスを継承するかの目安になる
+
+// 10.12 above, beside, toStringの実装
+// 関係ないけどメモ
+// for式はKotlinのCollectionに対するメソッドチェーンの読み替えだと思えば良い気がしてきた
+// 可読性を落とさず一つのブロックに入れながら、それぞれがシーケンシャルに処理される的な
+
+// newでの生成からあとの章で作ったファクトリメソッドに書き換えてある
+abstract class Element {
+  def contents: Array[String]
+  def height: Int = contents.length
+  def width: Int = if (height == 0) 0 else contents(0).length
+  def above(that: Element): Element = {
+    require(this.width == that.width) // 簡単のためここでは異なるwidthは考慮しない
+    Element.elem(this.contents ++ that.contents)
+  }
+  def beside(that: Element): Element = {
+    require(this.height == that.height) // 簡単のためここでは異なるheightは考慮しない
+    // 下のfor式は大体これと同じ
+    // val contents = this.contents.zip(that.contents).map{case (line1, line2) => line1 + line2}
+    val contents = for ((line1, line2) <- this.contents.zip(that.contents)) yield line1 + line2
+    Element.elem(contents)
+  }
+  // 統一形式アクセスの作法で()をつけない
+  // 純粋で副作用の無い関数のため
+  override def toString = contents.mkString("/n")
 }
-invokeDemo(new Sample1)
-invokeDemo(new Sample2)
+
+// 10.13 ファクトリーオブジェクトの定義
+// ファクトリメソッドでオブジェクトを生成することで個別の詳細を隠蔽することができる
+// ファクトリはコンパニオンオブジェクトに置くのが素直
+// 知識をこのコンパニオンオブジェクトに集約できるので、各実装をprivateにして完全に隠蔽もできる
+object Element {
+  private class ArrayElement(val contents: Array[String]) extends Element
+
+  private class LineElement(s: String) extends ArrayElement(Array(s)) {
+    override def width = s.length
+    override def height = 1
+  }
+
+  private class UniformElement(ch: Char, override val width: Int, override val height: Int) extends Element {
+    private val line = ch.toString * width
+    override def contents: Array[String] = Array.fill(height)(line)
+  }
+  def elem(contents: Array[String]) = new ArrayElement(contents)
+  def elem(chr: Char, width: Int, height: Int) = new UniformElement(chr, width, height)
+  def elem(line: String) = new LineElement(line)
+}
