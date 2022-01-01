@@ -59,3 +59,45 @@ class LineElement(s: String) extends ArrayElement(Array(s)) {
   override def width = s.length
   override def height = 1
 }
+
+// 10.8 override修飾子の使い方
+// 親クラスの具象メンバーをoverrideするすべてのメンバーにこの修飾子を付けなければならない
+// 親クラスの抽象メンバーを実装するときはつけてもつけなくても良い
+// 基底クラスのメンバーに対してあとから同名メンバーを追加したときなどに想定外のoverrideが起きないかコンパイル時点で判断できる
+
+// 10.9 多相性と動的束縛
+// 多相性 = ポリモーフィズム
+
+class UniformElement(
+    ch: Char,
+    override val width: Int,
+    override val height: Int
+) extends Element {
+  private val line = ch.toString * width
+  override def contents: Array[String] = Array.fill(height)(line)
+}
+
+val e1 : Element = new ArrayElement(Array("Hello", "World"))
+val ae : ArrayElement = new ArrayElement(Array("Hello", "World"))
+val e2: Element = ae
+val e3: Element = new UniformElement('x', 2, 3)
+
+abstract class Sample {
+  def demo() = {
+    println("Sample's implementation invoked")
+  }
+}
+
+class Sample1 extends Sample {
+  override def demo() = {
+    println("Sample1's implementation invoked")
+  }
+}
+
+class Sample2 extends Sample
+
+def invokeDemo(e: Sample) = {
+  e.demo()
+}
+invokeDemo(new Sample1)
+invokeDemo(new Sample2)
