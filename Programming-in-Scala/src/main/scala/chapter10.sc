@@ -1,4 +1,3 @@
-import Element.elem
 // 10 合成と継承
 // 10.1 2Dレイアウトライブラリー
 
@@ -22,11 +21,11 @@ import Element.elem
 
 // 空括弧メソッドとパラメーターなしメソッドは相互にオーバーライドできる
 // Javaからの呼び出し時にも読み替えられる
-abstract class Element {
-  def contents: Array[String]
-  def height: Int = contents.length
-  def width: Int = if (height == 0) 0 else contents(0).length
-}
+//abstract class Element {
+//  def contents: Array[String]
+//  def height: Int = contents.length
+//  def width: Int = if (height == 0) 0 else contents(0).length
+//}
 
 // 10.4 クラスの拡張
 // extendsには2つの効果がある
@@ -37,29 +36,29 @@ abstract class Element {
 
 // スーパークラスで実装済みのものはサブクラスでオーバーライドできる
 // スーパークラスで定義済み抽象メンバーは実装(implement)する必要がある
-class ArrayElement(conts: Array[String]) extends Element {
-  def contents: Array[String] = conts
-}
+//class ArrayElement(conts: Array[String]) extends Element {
+//  def contents: Array[String] = conts
+//}
 
 // 10.5 メソッドとフィールドのオーバーライド
 // Scalaではフィールドがパラメーターなしメソッドをオーバーライドすることもできる
-class ArrayElement(conts: Array[String]) extends Element {
-  val contents: Array[String] = conts
-}
+//class ArrayElement(conts: Array[String]) extends Element {
+//  val contents: Array[String] = conts
+//}
 // Scalaは値(フィールド、メソッド、パッケージ、シングルトンオブジェクト)と型(クラス、トレイト)の2種類の名前空間しか持たない
 // そのため、フィールドとメソッドは同じ名称にできない
 
 // 10.6 パラメーターフィールドの定義
 // パラメーターにval, varと可視性修飾子をつけることで、パラメーターとフィールドを兼ねるパラメーターフィールドとして定義できる
-class ArrayElement(val contents: Array[String]) extends Element
+//class ArrayElement(val contents: Array[String]) extends Element
 
 // 10.7 スーパーコンストラクターの呼び出し
 // スーパークラス名の後ろに括弧で渡したい引数を渡すことでスーパーコンストラクターを呼び出すことができる
 // これを利用すると、Arrayを要求するスーパークラスを文字列を渡すサブクラスで拡張することができる
-class LineElement(s: String) extends ArrayElement(Array(s)) {
-  override def width = s.length
-  override def height = 1
-}
+//class LineElement(s: String) extends ArrayElement(Array(s)) {
+//  override def width = s.length
+//  override def height = 1
+//}
 
 // 10.8 override修飾子の使い方
 // 親クラスの具象メンバーをoverrideするすべてのメンバーにこの修飾子を付けなければならない
@@ -69,37 +68,37 @@ class LineElement(s: String) extends ArrayElement(Array(s)) {
 // 10.9 多相性と動的束縛
 // 多相性 = ポリモーフィズム
 
-class UniformElement(
-    ch: Char,
-    override val width: Int,
-    override val height: Int
-) extends Element {
-  private val line = ch.toString * width
-  override def contents: Array[String] = Array.fill(height)(line)
-}
-
-val e1 : Element = new ArrayElement(Array("Hello", "World"))
-val ae : ArrayElement = new ArrayElement(Array("Hello", "World"))
-val e2: Element = ae
-val e3: Element = new UniformElement('x', 2, 3)
+//class UniformElement(
+//    ch: Char,
+//    override val width: Int,
+//    override val height: Int
+//) extends Element {
+//  private val line = ch.toString * width
+//  override def contents: Array[String] = Array.fill(height)(line)
+//}
+//
+//val e1 : Element = new ArrayElement(Array("Hello", "World"))
+//val ae : ArrayElement = new ArrayElement(Array("Hello", "World"))
+//val e2: Element = ae
+//val e3: Element = new UniformElement('x', 2, 3)
 
 // 呼び出される実装は変数や式の型ではなく実行時のオブジェクトの型になる
 // これを動的束縛と呼ぶ
-abstract class Sample {
-  def demo(): Unit = println("Sample's implementation invoked")
-}
-
-class Sample1 extends Sample {
-  override def demo(): Unit = println("Sample1's implementation invoked")
-}
-
-class Sample2 extends Sample
-
-def invokeDemo(e: Sample): Unit = e.demo()
+//abstract class Sample {
+//  def demo(): Unit = println("Sample's implementation invoked")
+//}
+//
+//class Sample1 extends Sample {
+//  override def demo(): Unit = println("Sample1's implementation invoked")
+//}
+//
+//class Sample2 extends Sample
+//
+//def invokeDemo(e: Sample): Unit = e.demo()
 
 // 引数の型に関わらず、渡されたオブジェクトの型で実行されてることがわかる
-invokeDemo(new Sample1) // Sample1's implementation invoked
-invokeDemo(new Sample2) // Sample's implementation invoked
+//invokeDemo(new Sample1) // Sample1's implementation invoked
+//invokeDemo(new Sample2) // Sample's implementation invoked
 
 // 10.10 finalメンバーの実装
 // final修飾子のついたメンバーはサブクラスでoverrideできない
@@ -115,25 +114,23 @@ invokeDemo(new Sample2) // Sample's implementation invoked
 // 可読性を落とさず一つのブロックに入れながら、それぞれがシーケンシャルに処理される的な
 
 // newでの生成からあとの章で作ったファクトリメソッドに書き換えてある
-abstract class Element {
-  def contents: Array[String]
-  def height: Int = contents.length
-  def width: Int = if (height == 0) 0 else contents(0).length
-  def above(that: Element): Element = {
-    require(this.width == that.width) // 簡単のためここでは異なるwidthは考慮しない
-    Element.elem(this.contents ++ that.contents)
-  }
-  def beside(that: Element): Element = {
-    require(this.height == that.height) // 簡単のためここでは異なるheightは考慮しない
-    // 下のfor式は大体これと同じ
-    // val contents = this.contents.zip(that.contents).map{case (line1, line2) => line1 + line2}
-    val contents = for ((line1, line2) <- this.contents.zip(that.contents)) yield line1 + line2
-    Element.elem(contents)
-  }
-  // 統一形式アクセスの作法で()をつけない
-  // 純粋で副作用の無い関数のため
-  override def toString = contents.mkString("/n")
-}
+//abstract class Element {
+//  def contents: Array[String]
+//  def height: Int = contents.length
+//  def width: Int = if (height == 0) 0 else contents(0).length
+//  def above(that: Element): Element = {
+//    Element.elem(this.contents ++ that.contents)
+//  }
+//  def beside(that: Element): Element = {
+//    // 下のfor式は大体これと同じ
+//    // val contents = this.contents.zip(that.contents).map{case (line1, line2) => line1 + line2}
+//    val contents = for ((line1, line2) <- this.contents.zip(that.contents)) yield line1 + line2
+//    Element.elem(contents)
+//  }
+//  // 統一形式アクセスの作法で()をつけない
+//  // 純粋で副作用の無い関数のため
+//  override def toString = contents.mkString("\n")
+//}
 
 // 10.13 ファクトリーオブジェクトの定義
 // ファクトリメソッドでオブジェクトを生成することで個別の詳細を隠蔽することができる
@@ -151,9 +148,9 @@ object Element {
     private val line = ch.toString * width
     override def contents: Array[String] = Array.fill(height)(line)
   }
-  def elem(contents: Array[String]) = new ArrayElement(contents)
-  def elem(chr: Char, width: Int, height: Int) = new UniformElement(chr, width, height)
-  def elem(line: String) = new LineElement(line)
+  def elem(contents: Array[String]): Element = new ArrayElement(contents)
+  def elem(chr: Char, width: Int, height: Int): Element = new UniformElement(chr, width, height)
+  def elem(line: String): Element = new LineElement(line)
 }
 
 // 10.14 高さと幅を調整するheightenとwiden
@@ -162,12 +159,14 @@ abstract class Element {
   def height: Int = contents.length
   def width: Int = if (height == 0) 0 else contents(0).length
   def above(that: Element): Element = {
-    require(this.width == that.width) // 簡単のためここでは異なるwidthは考慮しない
-    Element.elem(this.contents ++ that.contents)
+    val this1 = this widen that.width
+    val that1 = that widen this.width
+    Element.elem(this1.contents ++ that1.contents)
   }
   def beside(that: Element): Element = {
-    require(this.height == that.height) // 簡単のためここでは異なるheightは考慮しない
-    val contents = for ((line1, line2) <- this.contents.zip(that.contents)) yield line1 + line2
+    val this1 = this heighten that.height
+    val that1 = that heighten this.height
+    val contents = for ((line1, line2) <- this1.contents.zip(that1.contents)) yield line1 + line2
     Element.elem(contents)
   }
 
@@ -191,33 +190,34 @@ abstract class Element {
     }
   }
 
-  override def toString = contents.mkString("/n")
+  override def toString = contents.mkString("\n")
 }
 
-// 10.15 レイアウトライブラリーの昨日をすべて試せるアプリケーション
+// 10.15 レイアウトライブラリーの機能をすべて試せるアプリケーション
 object Spiral {
-  val space = elem(" ")
-  val corner = elem("+")
+  val space = Element.elem(" ")
+  val corner = Element.elem("+")
 
   def spiral(nEdges: Int, direction: Int): Element = {
-    if (nEdges == 1) elem("+")
+    if (nEdges == 1) corner
     else {
       val sp = spiral(nEdges - 1, (direction + 3) % 4)
-      val verticalBar = elem('|', 1, sp.height)
-      val horizontalBar = elem('-', sp.width, 1)
+      val verticalBar = Element.elem('|', 1, sp.height)
+      val horizontalBar = Element.elem('-', sp.width, 1)
       if (direction == 0) {
-        corner.beside(horizontalBar)
-          .above(sp.beside(space))
+        (corner beside horizontalBar) above (sp beside space) // left
       } else if (direction == 1) {
-        sp.above(space)
-          .beside(corner.above(verticalBar))
+        (sp above space) beside (corner above verticalBar) // up
       } else if (direction == 2) {
-        space.beside(sp).above(horizontalBar.beside(corner))
-      } else verticalBar.above(corner).beside(space.above(sp))
+        (space beside sp) above (horizontalBar beside corner) // right
+      } else {
+        (verticalBar above corner) beside (space above sp) // down
+      }
     }
   }
-  def main(args: Array[String]) = {
-    val nSides = args(0).toInt
-    println(spiral(nSides,0))
-  }
 }
+
+Spiral.spiral(6, 0)
+Spiral.spiral(11, 0)
+Spiral.spiral(17,0)
+// 10.16 まとめ
