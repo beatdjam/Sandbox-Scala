@@ -1,3 +1,4 @@
+import Element.elem
 // 10 合成と継承
 // 10.1 2Dレイアウトライブラリー
 
@@ -153,4 +154,70 @@ object Element {
   def elem(contents: Array[String]) = new ArrayElement(contents)
   def elem(chr: Char, width: Int, height: Int) = new UniformElement(chr, width, height)
   def elem(line: String) = new LineElement(line)
+}
+
+// 10.14 高さと幅を調整するheightenとwiden
+abstract class Element {
+  def contents: Array[String]
+  def height: Int = contents.length
+  def width: Int = if (height == 0) 0 else contents(0).length
+  def above(that: Element): Element = {
+    require(this.width == that.width) // 簡単のためここでは異なるwidthは考慮しない
+    Element.elem(this.contents ++ that.contents)
+  }
+  def beside(that: Element): Element = {
+    require(this.height == that.height) // 簡単のためここでは異なるheightは考慮しない
+    val contents = for ((line1, line2) <- this.contents.zip(that.contents)) yield line1 + line2
+    Element.elem(contents)
+  }
+
+  // 左右にpaddingする関数
+  def widen(w: Int): Element = {
+    if (w <= this.width) this
+    else {
+      val left = Element.elem(' ', (w - width) / 2, height)
+      val right = Element.elem(' ', w - width - left.width, height)
+      left.beside(this).beside(right)
+    }
+  }
+
+  // 上下にpaddingする関数
+  def heighten(h: Int): Element = {
+    if (h <= this.height) this
+    else {
+      val top = Element.elem(' ', width, (h - height) / 2)
+      val bottom = Element.elem(' ', width, h - height - top.height)
+      top.above(this).above(bottom)
+    }
+  }
+
+  override def toString = contents.mkString("/n")
+}
+
+// 10.15 レイアウトライブラリーの昨日をすべて試せるアプリケーション
+object Spiral {
+  val space = elem(" ")
+  val corner = elem("+")
+
+  def spiral(nEdges: Int, direction: Int): Element = {
+    if (nEdges == 1) elem("+")
+    else {
+      val sp = spiral(nEdges - 1, (direction + 3) % 4)
+      val verticalBar = elem('|', 1, sp.height)
+      val horizontalBar = elem('-', sp.width, 1)
+      if (direction == 0) {
+        corner.beside(horizontalBar)
+          .above(sp.beside(space))
+      } else if (direction == 1) {
+        sp.above(space)
+          .beside(corner.above(verticalBar))
+      } else if (direction == 2) {
+        space.beside(sp).above(horizontalBar.beside(corner))
+      } else verticalBar.above(corner).beside(space.above(sp))
+    }
+  }
+  def main(args: Array[String]) = {
+    val nSides = args(0).toInt
+    println(spiral(nSides,0))
+  }
 }
