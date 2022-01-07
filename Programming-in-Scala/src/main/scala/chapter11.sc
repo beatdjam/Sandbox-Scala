@@ -32,3 +32,30 @@ def divide(x: Int, y: Int): Int = {
   }
 }
 // throw new RuntimeException() などもNothingを返す
+
+// 11.4 独自の値クラスの定義
+// 組み込みの値クラスと同様に独自の値クラスを定義することができる
+// 値クラスにできるクラスは、パラメーターが1つで、内容はdefだけでなければならない
+class Dollars(val amount: Int) extends AnyVal {
+  override def toString: String = s"$amount"
+}
+val money = new Dollars(1000000)
+money.amount
+
+// 11.4.1 同じ型の羅列を避ける
+// 過度な再利用をせず、個々の概念ごとに新しいクラスを定義するべき
+
+// Stringの羅列の表現力の低い記述
+def title(text: String, anchor: String, style: String) : String =
+  s"<a id='$anchor'><h1 class='$style'>$text</h1></a>"
+
+// それぞれを値クラスで表現した記述
+class Anchor(val value: String) extends AnyVal
+class Style(val value: String) extends AnyVal
+class Text(val value: String) extends AnyVal
+class Html(val value: String) extends AnyVal
+
+def title(text: Text, anchor: Anchor, style: Style) : Html =
+  new Html(s"<a id='${anchor.value}'><h1 class='${style.value}'>${text.value}</h1></a>")
+
+// 11.5 まとめ
