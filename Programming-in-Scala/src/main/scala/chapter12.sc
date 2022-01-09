@@ -30,3 +30,30 @@ class Frog extends Philosophical {
 // のようにクラスパラメーターを利用することはできない
 
 // traitのsuper呼び出しは、実際にmixinされたときに決定する
+
+// 12.2 シンインターフェイスとリッチインターフェイス
+// 貧弱なシンインターフェイス
+// 豊かな立地インターフェイス
+
+// シンインターフェイスの例
+trait CharSequence {
+  def charAt(index: Int): Char
+  def length: Int
+  def subSequence(start: Int, end: Int): CharSequence
+  def toString(): String
+}
+
+// Scalaのtraitは具象メソッドを持てるので、リッチインターフェイスを提供しやすい
+
+// 12.3 具体例: 矩形オブジェクト
+class Point(val x:Int, val y:Int)
+trait Rectangular {
+  def topLeft: Point
+  def bottomRight: Point
+
+  def left = topLeft.x
+  def right = bottomRight.x
+  def width = right - left
+}
+
+class Rectangle(val topLeft: Point, val bottomRight: Point) extends Rectangular
