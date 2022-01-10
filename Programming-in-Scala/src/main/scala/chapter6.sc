@@ -64,7 +64,6 @@ import scala.language.implicitConversions
 // 簡潔さ=読みやすさで無いことに注意して利用する
 
 // 6.14 まとめ
-
 class Rational(n: Int, d: Int) {
   require(d != 0) // 分母が0は不正
 
