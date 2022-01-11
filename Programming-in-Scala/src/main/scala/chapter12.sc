@@ -146,6 +146,7 @@ queue3.get()
 
 
 // 積み上げ可能なtrait
+// traitのmixinの順番で挙動が変わる
 trait Incrementing extends IntQueue {
   abstract override def put(x: Int): Unit = super.put(x + 1)
 }
@@ -170,3 +171,24 @@ queue5.put(1)
 queue5.get()
 queue5.get()
 queue5.get()
+
+// 12.6 Scalaが多重継承ではなくミックスイン合成を選んだ理由
+// traitではsuperのメソッドを呼び出すとき,mixinされるtraitを線形化した結果によってどのメソッドを呼び出すか決まる
+// 普通の多重継承はスーパークラスを呼び出すので順番が決まってしまう
+
+// この例では下記の順番で線形化される
+// Cat → FourLegged → HasLegs → Furry → Animal → AnyRef → Any
+class Animal
+trait Furry extends Animal
+trait HasLegs extends Animal
+trait FourLegged extends HasLegs
+class Cat extends Animal with Furry with FourLegged
+
+// 12.7 トレイトすべきか、せざるべきか
+// 振る舞いが再利用されないなら具象クラスにする
+// 複数の無関係なクラスで再利用されるならトレイトにする
+// Javaで継承できるようにしたいなら抽象クラスにする
+// (抽象メンバーしか持たないScalaのトレイトはJavaに対してinterfaceとして振る舞う)
+// 迷ったらトレイトにしておくのが一番可能性を狭めない
+
+// 12.8 まとめ
