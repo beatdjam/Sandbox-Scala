@@ -50,3 +50,27 @@
 // 13.5.3何もつけないとpublicになる
 
 // 13.5.4 アクセス保護のスコープ
+// Scalaのアクセス修飾子はprivate[X], protected[X]のように可視性のスコープを細かく表現することができる
+// 指定できるのはパッケージ、クラス、オブジェクト
+// private[bobsrockets]の場合、bobsrocketsパッケージ配下からは可視であるという意味
+
+// privatep[this]のように記述すると、定義を含むオブジェクトの中からしかアクセスできない。
+// これを、object-privateと呼ぶ
+
+// 13.5.5 可視性とコンパニオンオブジェクト
+// Scalaでは、クラスと同名のコンパニオンオブジェクトを定義できる
+// クラスとコンパニオンオブジェクトはお互いにprivateな値を参照することができる
+class Rocket {
+  import Rocket.fuel
+  private def canGoHomeAgain = fuel > 20
+}
+
+object Rocket {
+  private def fuel = 10
+  def chooseStrategy(rocket: Rocket): Unit = {
+    if (rocket.canGoHomeAgain) goHome()
+    else pickAStar()
+  }
+  def goHome(): Unit = {}
+  def pickAStar(): Unit = {}
+}
