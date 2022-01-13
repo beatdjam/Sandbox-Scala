@@ -54,7 +54,7 @@
 // 指定できるのはパッケージ、クラス、オブジェクト
 // private[bobsrockets]の場合、bobsrocketsパッケージ配下からは可視であるという意味
 
-// privatep[this]のように記述すると、定義を含むオブジェクトの中からしかアクセスできない。
+// private[this]のように記述すると、定義を含むオブジェクトの中からしかアクセスできない。
 // これを、object-privateと呼ぶ
 
 // 13.5.5 可視性とコンパニオンオブジェクト
@@ -74,3 +74,12 @@ object Rocket {
   def goHome(): Unit = {}
   def pickAStar(): Unit = {}
 }
+
+// 13.6 パッケージオブジェクト
+// packageのトップレベルにパッケージオブジェクトとしてメソッドなどを配置することができる
+
+// package object bobsdelights {
+//   def showFruit(fruit: Fruit) = { }
+// }
+
+// 13.7 まとめ
