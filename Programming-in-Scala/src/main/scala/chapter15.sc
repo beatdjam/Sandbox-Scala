@@ -1,9 +1,15 @@
+import scala.math.Pi
+
 // 15 ケースクラスとパターンマッチ
 // 15.1 単純な例
 abstract class Expr
+// 変数
 case class Var(name: String) extends Expr
+// 数値
 case class Number(num: Double) extends Expr
-case class UnOp(operator: String, srg: Expr) extends Expr
+// 単項
+case class UnOp(operator: String, arg: Expr) extends Expr
+// 二項
 case class BinOp(operator: String, left: Expr, right: Expr) extends Expr
 
 // 15.1.1 ケースクラス
@@ -28,3 +34,101 @@ value.name
 // 一部のパラメータが異なるインスタンスを作るときに、元のインスタンスから一部の値を置き換えたインスタンスを生成できる
 val op = BinOp("+", Number(1), value)
 op.copy(operator = "-")
+
+// 15.1.2 パターンマッチ
+// match式はパターンと1つ以上の式が含まれており、マッチしたパターンに対応する式が評価される
+// 定数とマッチさせるパターン、eのように変数をマッチさせるパターンがある
+// 変数はマッチした後、評価される式の中で値として使うことができる
+def simplifyTop(expr: Expr): Expr = expr match {
+  case UnOp("-", UnOp("-", e)) => e // 負の負は負のまま
+  case BinOp("+", e, Number(0)) => e // 0の加算は元のまま
+  case BinOp("*", e, Number(1)) => e // 1の乗算は元のまま
+  case _ => expr
+}
+
+// 15.1.3 matchとswitchの違い
+// Javaスタイルのswitchを一般化したもの
+// フォールスルーはなく、マッチする式がなければエラーになる
+
+// 15.2 パターンの種類
+
+// 15.2.1 ワイルドカードパターン
+// ワイルドカードパターン(_)はあらゆる値にマッチする
+// パターンに含めない無視する値に対しても利用する
+
+// 15.2.2 定数パターン
+def describe(x: Any) = x match {
+  case 5 => "five"
+  case true => "truth"
+  case "hello" => "hi!"
+  case Nil => "the empty list"
+  case _ => "something else"
+}
+
+// 15.2.3 変数パターン
+def describe(x: Any) = x match {
+  case 0 => "five"
+  case something => "something:" + something.toString
+}
+
+// 先頭が小文字になっているとパターン変数、大文字だと定数とみなす
+math.E match {
+  case math.Pi => "Pi = " + Pi // Piにはmatchしない
+  case pi => "not pi = " + pi
+  case _ => "something" // piにmatchするので到達しない
+}
+
+// 15.2.4 コンストラクターパターン
+// コンストラクタに渡される値がマッチするかどうかをmatchする
+// 入れ子になっていてもパターンを検査する
+def simplifyTop(expr: Expr): Expr = expr match {
+  case BinOp("+", e, Number(0)) => e
+}
+
+// 下記3つのマッチングを一気に行っている
+// BinOpかを確認
+// 第3引数がNumberかを確認
+// Numberの値が0かを確認
+
+// 15.2.5 シーケンスパターン
+// 長さが3で先頭が0
+Seq(0, 1, 2) match {
+  case List(0, _, _) => println("found")
+  case _ => println("not found")
+}
+
+// 長さが1以上で先頭が0
+Seq(0, 1, 2, 3) match {
+  case List(0, _*) => println("found")
+  case _ => println("not found")
+}
+
+// 15.2.6 タプルパターン
+(0, 1, 2, 3) match {
+  case (one, two, three, four) => println(one, two, three, four)
+  case _ => println("not found")
+}
+
+// 15.2.7 型付きパターン
+// 型付きパターンにmatchした値はその型として扱うことができる
+"test" match {
+  case s: String => println(s)
+  case _ => println("something")
+}
+
+2 match {
+  case i: Int => println(i)
+  case _ => println("something")
+}
+
+// 15.2.7.1 型消去
+// JavaとScalaは型引数の情報をコンパイル時に消去する
+// そのため、Map[String, String]とMap[Int, Int]を区別できない
+// Arrayは特別扱いをされているので、要素型をmatchに利用することができる
+
+// 15.2.8 変数束縛パターン
+// 変数名 @ パターンの順序で書けば変数束縛パターンになる
+// nにNumber(0)を束縛する
+def simplifyTop(expr: Expr): Expr = expr match {
+  case BinOp("+", _,n @ Number(0)) => n
+}
