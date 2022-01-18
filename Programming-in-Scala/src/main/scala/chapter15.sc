@@ -132,3 +132,14 @@ Seq(0, 1, 2, 3) match {
 def simplifyTop(expr: Expr): Expr = expr match {
   case BinOp("+", _,n @ Number(0)) => n
 }
+
+// 15.3 パターンガード
+def simplifyAdd(e: Expr) = e match {
+  case BinOp("+", x, y) if x == y => BinOp("*", x, Number(2))
+  case  _ => e
+}
+
+// 15.4 パターンのオーバーラップ
+// パターンは上からマッチングされる
+// 上段で広い範囲のマッチングを行うと到達しないケースができる可能性がある
+// その場合コンパイラはwarningを出力する
