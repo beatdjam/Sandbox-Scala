@@ -3,14 +3,10 @@ import scala.math.Pi
 // 15 ケースクラスとパターンマッチ
 // 15.1 単純な例
 abstract class Expr
-// 変数
-case class Var(name: String) extends Expr
-// 数値
-case class Number(num: Double) extends Expr
-// 単項
-case class UnOp(operator: String, arg: Expr) extends Expr
-// 二項
-case class BinOp(operator: String, left: Expr, right: Expr) extends Expr
+case class Var(name: String) extends Expr // 変数
+case class Number(num: Double) extends Expr // 数値
+case class UnOp(operator: String, arg: Expr) extends Expr // 単項
+case class BinOp(operator: String, left: Expr, right: Expr) extends Expr // 二項
 
 // 15.1.1 ケースクラス
 // caseという修飾子をつけたクラスをcase classと呼ぶ
@@ -143,3 +139,22 @@ def simplifyAdd(e: Expr) = e match {
 // パターンは上からマッチングされる
 // 上段で広い範囲のマッチングを行うと到達しないケースができる可能性がある
 // その場合コンパイラはwarningを出力する
+
+// 15.5 シールドクラス
+// Scalaには同じファイルで定義されたクラス以外をサブクラスにできないsealed classがある
+// sealed classを継承したcase classをつかってmatch式を書くと、パターンが網羅されていない場合に
+// warnが出る
+sealed abstract class Expr
+case class Var(name: String) extends Expr
+case class Number(num: Double) extends Expr
+case class UnOp(operator: String, arg: Expr) extends Expr
+case class BinOp(operator: String, left: Expr, right: Expr) extends Expr
+// warnが出るケース
+def simplifyAdd(e: Expr) = e match {
+  case BinOp("+", x, y) if x == y => BinOp("*", x, Number(2))
+}
+
+// warnを出さないケース
+def simplifyAdd(e: Expr) = (e: @unchecked) match {
+  case BinOp("+", x, y) if x == y => BinOp("*", x, Number(2))
+}
