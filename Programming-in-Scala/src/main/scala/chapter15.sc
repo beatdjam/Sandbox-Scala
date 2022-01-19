@@ -158,3 +158,53 @@ def simplifyAdd(e: Expr) = e match {
 def simplifyAdd(e: Expr) = (e: @unchecked) match {
   case BinOp("+", x, y) if x == y => BinOp("*", x, Number(2))
 }
+
+// 15.6 Option型
+// 存在するかわからない値のためにOption型がある
+// 存在すればSome(x), 存在しなければNoneになる
+// Option型はmatch式で分解できる
+(Some(1) : Option[Int]) match {
+  case Some(x) => x
+  case None => -1
+}
+
+// 15.7 パターンの意外な用途
+
+// 15.7.1 変数定義におけるパターン
+// valやvarの定義ではパターンを使うことができる
+val tuple = (123, "abc")
+val (num, str) = tuple
+
+// case classでパターンにマッチングさせた変数を宣言することもできる
+val exp = BinOp("*", Number(5), Number(1))
+val BinOp(op, left, right) = exp
+
+// 15.7.2 部分関数としてのケースシーケンス
+// 中括弧で囲んだ選択肢のシーケンスは関数リテラルとして利用できる
+
+//{
+//  case Some(x) => x
+//  case None => -1
+//}
+
+// ケースシーケンスは部分関数になる
+
+// 空リストなどを渡すと失敗する関数
+val second: List[Int] => Int = {
+  case _ :: y :: _ => y
+}
+//second(Nil) // MatchError
+
+// 部分関数が定義されているかをチェックするには、部分関数型を使って書く必要がある
+val second: PartialFunction[List[Int], Int] = {
+  case _ :: y :: _ => y
+}
+second.isDefinedAt(List()) // true
+second.isDefinedAt(List(5, 6, 7)) // false
+
+// PartialFunctionで宣言されたものはisDefinedAtでチェックできるようになる
+
+// 15.7.3 for式内のパターン
+// パターンはfor式の中でも使える
+val results = List(Some("apple"), None, Some("orange"))
+for (Some(fruit) <- results) println(fruit) // パターンにmatchしない値は捨てられる
