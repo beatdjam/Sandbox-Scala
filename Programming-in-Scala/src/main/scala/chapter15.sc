@@ -208,3 +208,36 @@ second.isDefinedAt(List(5, 6, 7)) // false
 // パターンはfor式の中でも使える
 val results = List(Some("apple"), None, Some("orange"))
 for (Some(fruit) <- results) println(fruit) // パターンにmatchしない値は捨てられる
+
+// 15.8 これまでよりも大規模なコード例
+// 数式フォーマッターを作る
+sealed abstract class Expr
+case class Var(name: String) extends Expr
+case class Number(num: Double) extends Expr
+case class UnOp(operator: String, arg: Expr) extends Expr
+case class BinOp(operator: String, left: Expr, right: Expr) extends Expr
+
+class ExprFormatter {
+  // 演算子の優先順位の昇順
+  private val opGroups = Seq(
+    Set("|", "||"),
+    Set("&", "&&"),
+    Set("^"),
+    Set("==", "!="),
+    Set("<", "<=", ">", ">="),
+    Set("+", "-"),
+    Set("*", "%")
+  )
+
+  // 優先順位を生成する
+  private val precedence = {
+    val assocs = for {
+      i <- opGroups.indices
+      op <- opGroups(i)
+    } yield op -> i
+    assocs.toMap
+  }
+
+  private val unaryPrecedence = opGroups.length
+  private val fractionPrecedence = -1
+}
