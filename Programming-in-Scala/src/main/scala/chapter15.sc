@@ -1,5 +1,3 @@
-import Element.elem
-
 import scala.math.Pi
 
 // 15 ケースクラスとパターンマッチ
@@ -305,34 +303,48 @@ class ExprFormatter {
   // 与えられたExprの種類によってフォーマット処理を分ける
   private def format(e: Expr, enclPrec: Int): Element = {
     e match {
-      case Var(name) => elem(name)
+      case Var(name) => Element.elem(name)
 
       case Number(num) =>
         def stripDot(s: String) = {
           if (s endsWith ".0") s.substring(0, s.length - 2)
           else s
         }
-        elem(stripDot(num.toString))
+        Element.elem(stripDot(num.toString))
 
       case UnOp(op, arg) =>
-        elem(op) beside format(arg, unaryPrecedence)
+        Element.elem(op) beside format(arg, unaryPrecedence)
 
       case BinOp("/", left, right) =>
         val top = format(left, fractionPrecedence)
         val bot = format(right, fractionPrecedence)
-        val line = elem('-', top.width max bot.width, 1)
+        val line = Element.elem('-', top.width max bot.width, 1)
         val frac = top above line above bot
         if (enclPrec != fractionPrecedence) frac
-        else elem(" ") beside frac beside elem(" ")
+        else Element.elem(" ") beside frac beside Element.elem(" ")
 
-      case BinOp(operator, left, right) =>
+      case BinOp(op, left, right) =>
         val opPrec = precedence(op)
         val l = format(left, opPrec)
         val r = format(right, opPrec + 1)
-        val oper = l beside elem(" " + op + " ") beside r
+        val oper = l beside Element.elem(" " + op + " ") beside r
         if (enclPrec <= opPrec) oper
-        else elem("(") beside oper beside elem(")")
+        else Element.elem("(") beside oper beside Element.elem(")")
     }
   }
   def format(e: Expr): Element = format(e, 0)
 }
+
+val f = new ExprFormatter
+val e1 = BinOp("*",
+                  BinOp("/", Number(1), Number(2)),
+                  BinOp("+", Var("x"), Number(1))
+                )
+val e2 = BinOp("+",
+  BinOp("/", Var("x"), Number(2)),
+  BinOp("/", Number(1.5), Var("x"))
+)
+val e3 = BinOp("/", e1, e2)
+
+def show(e: Expr) = s"${println(f.format(e))}\n\n"
+for (e <- Seq(e1, e2, e3)) show(e)
