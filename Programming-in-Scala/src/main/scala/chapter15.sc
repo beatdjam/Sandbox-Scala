@@ -1,3 +1,5 @@
+import Element.elem
+
 import scala.math.Pi
 
 // 15 ケースクラスとパターンマッチ
@@ -217,6 +219,63 @@ case class Number(num: Double) extends Expr
 case class UnOp(operator: String, arg: Expr) extends Expr
 case class BinOp(operator: String, left: Expr, right: Expr) extends Expr
 
+// 過去に作ったElementクラス
+object Element {
+  private class ArrayElement(val contents: Array[String]) extends Element
+
+  private class LineElement(s: String) extends ArrayElement(Array(s)) {
+    override def width = s.length
+    override def height = 1
+  }
+
+  private class UniformElement(ch: Char, override val width: Int, override val height: Int) extends Element {
+    private val line = ch.toString * width
+    override def contents: Array[String] = Array.fill(height)(line)
+  }
+  def elem(contents: Array[String]): Element = new ArrayElement(contents)
+  def elem(chr: Char, width: Int, height: Int): Element = new UniformElement(chr, width, height)
+  def elem(line: String): Element = new LineElement(line)
+}
+
+abstract class Element {
+  def contents: Array[String]
+  def height: Int = contents.length
+  def width: Int = if (height == 0) 0 else contents(0).length
+  def above(that: Element): Element = {
+    val this1 = this widen that.width
+    val that1 = that widen this.width
+    Element.elem(this1.contents ++ that1.contents)
+  }
+  def beside(that: Element): Element = {
+    val this1 = this heighten that.height
+    val that1 = that heighten this.height
+    val contents = for ((line1, line2) <- this1.contents.zip(that1.contents)) yield line1 + line2
+    Element.elem(contents)
+  }
+
+  // 左右にpaddingする関数
+  def widen(w: Int): Element = {
+    if (w <= this.width) this
+    else {
+      val left = Element.elem(' ', (w - width) / 2, height)
+      val right = Element.elem(' ', w - width - left.width, height)
+      left.beside(this).beside(right)
+    }
+  }
+
+  // 上下にpaddingする関数
+  def heighten(h: Int): Element = {
+    if (h <= this.height) this
+    else {
+      val top = Element.elem(' ', width, (h - height) / 2)
+      val bottom = Element.elem(' ', width, h - height - top.height)
+      top.above(this).above(bottom)
+    }
+  }
+
+  override def toString = contents.mkString("\n")
+}
+
 class ExprFormatter {
   // 演算子の優先順位の昇順
   private val opGroups = Seq(
@@ -238,6 +297,42 @@ class ExprFormatter {
     assocs.toMap
   }
 
+  // 単項演算子の優先順位はどの演算子よりも高い
   private val unaryPrecedence = opGroups.length
+  // 除算演算子の優先順位は-1
   private val fractionPrecedence = -1
+
+  // 与えられたExprの種類によってフォーマット処理を分ける
+  private def format(e: Expr, enclPrec: Int): Element = {
+    e match {
+      case Var(name) => elem(name)
+
+      case Number(num) =>
+        def stripDot(s: String) = {
+          if (s endsWith ".0") s.substring(0, s.length - 2)
+          else s
+        }
+        elem(stripDot(num.toString))
+
+      case UnOp(op, arg) =>
+        elem(op) beside format(arg, unaryPrecedence)
+
+      case BinOp("/", left, right) =>
+        val top = format(left, fractionPrecedence)
+        val bot = format(right, fractionPrecedence)
+        val line = elem('-', top.width max bot.width, 1)
+        val frac = top above line above bot
+        if (enclPrec != fractionPrecedence) frac
+        else elem(" ") beside frac beside elem(" ")
+
+      case BinOp(operator, left, right) =>
+        val opPrec = precedence(op)
+        val l = format(left, opPrec)
+        val r = format(right, opPrec + 1)
+        val oper = l beside elem(" " + op + " ") beside r
+        if (enclPrec <= opPrec) oper
+        else elem("(") beside oper beside elem(")")
+    }
+  }
+  def format(e: Expr): Element = format(e, 0)
 }
