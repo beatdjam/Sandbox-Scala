@@ -126,3 +126,18 @@ def msort[T](less: (T, T) => Boolean)
 msort((x: Int, y:Int) => x < y) (List(5, 7, 1, 3))
 val intsort = msort((x: Int, y:Int) => x < y) _
 intsort(List(5, 7, 1, 3))
+
+// 16.7 Listクラスの高階メソッド
+// map, flatMap, foreach
+(1 to 5).flatMap(i => (1 to i).toList.map((i, _))).toList
+// filter, partition, find, takeWhile, dropWhile, span
+(1 to 5).toList.partition(_ % 2 == 0)
+(1 to 5).toList.span(_ < 3)
+// forall, exists
+
+// foldLeft, foldRight
+// foldLeftは左に傾いた木構造、foldRightは右に傾いた木構造になる
+def flattenLeft[T](xss: List[List[T]]) = xss.foldLeft(List[T]())(_ ::: _)
+def flattenRight[T](xss: List[List[T]]) = xss.foldRight(List[T]())(_ ::: _)
+flattenLeft(List(List(5, 7, 1, 3), List(5, 7, 1, 3)))
+flattenRight(List(List(5, 7, 1, 3), List(5, 7, 1, 3)))
