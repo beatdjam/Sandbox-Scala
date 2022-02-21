@@ -128,16 +128,28 @@ val intsort = msort((x: Int, y:Int) => x < y) _
 intsort(List(5, 7, 1, 3))
 
 // 16.7 Listクラスの高階メソッド
-// map, flatMap, foreach
+// 16.7.1 map, flatMap, foreach
 (1 to 5).flatMap(i => (1 to i).toList.map((i, _))).toList
-// filter, partition, find, takeWhile, dropWhile, span
+// 16.7.2 filter, partition, find, takeWhile, dropWhile, span
 (1 to 5).toList.partition(_ % 2 == 0)
 (1 to 5).toList.span(_ < 3)
-// forall, exists
+// 16.7.3 forall, exists
 
-// foldLeft, foldRight
+// 16.7.4 foldLeft, foldRight
 // foldLeftは左に傾いた木構造、foldRightは右に傾いた木構造になる
-def flattenLeft[T](xss: List[List[T]]) = xss.foldLeft(List[T]())(_ ::: _)
-def flattenRight[T](xss: List[List[T]]) = xss.foldRight(List[T]())(_ ::: _)
-flattenLeft(List(List(5, 7, 1, 3), List(5, 7, 1, 3)))
-flattenRight(List(List(5, 7, 1, 3), List(5, 7, 1, 3)))
+def flattenLeft[T](xss: List[List[T]]) = xss.foldLeft(List[T]()) {(x, y) =>
+  println(s"x: $x y: $y")
+  x ::: y
+}
+def flattenRight[T](xss: List[List[T]]) = xss.foldRight(List[T]()){(x, y) =>
+  println(s"x: $x y: $y")
+  x ::: y
+}
+flattenLeft(List(List(5, 7, 1, 3), List(5, 7, 1, 3), List(5, 7, 1, 3)))
+flattenRight(List(List(5, 7, 1, 3), List(5, 7, 1, 3), List(5, 7, 1, 3)))
+
+// 16.7.5 foldを使ったリストの反転
+def reverseLeft[T](xs: List[T]) = xs.foldLeft(List[T]())((acc, y) => y :: acc)
+
+// 16.7.6 sortWith
+List("huge", "fight", "at", "fox", "quickly").sortWith(_.length > _.length)
