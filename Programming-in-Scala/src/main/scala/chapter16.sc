@@ -153,3 +153,23 @@ def reverseLeft[T](xs: List[T]) = xs.foldLeft(List[T]())((acc, y) => y :: acc)
 
 // 16.7.6 sortWith
 List("huge", "fight", "at", "fox", "quickly").sortWith(_.length > _.length)
+
+// 16.8 Listオブジェクトのメソッド
+// 16.8.1 apply
+// 16.8.2 range
+List.range(1, 3)
+// 16.8.3 fill
+List.fill(5)('a')
+// 16.8.4 tabulate
+List.tabulate(5)(n => n * n)
+List.tabulate(6, 6)(_ * _)
+// 16.8.5 concat
+List.concat(List('a', 'b'), List('c'))
+
+// 16.9 複数のListをまとめて処理する方法
+// mapにtupleで渡す
+(List(10, 20) zip List(3, 4, 5))
+  .map { case (x, y) => x * y }
+
+// mapにパラメーターで渡す
+(List(10, 20) lazyZip List(3, 4, 5)).map(_ * _)
