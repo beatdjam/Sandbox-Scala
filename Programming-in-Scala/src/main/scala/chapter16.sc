@@ -172,4 +172,26 @@ List.concat(List('a', 'b'), List('c'))
   .map { case (x, y) => x * y }
 
 // mapにパラメーターで渡す
-(List(10, 20) lazyZip List(3, 4, 5)).map(_ * _)
+(List(10, 20) lazyZip List(3, 4, 5))
+  .map(_ * _)
+
+// 16.10 Scalaの型推論アルゴリズムについて
+// 型注釈が必要なケースとそうでないケースが有る
+// sortWithは適用時点でCharのListであることがわかる
+// msortの場合、(T, T) => Boolean が型の情報なしに与えられたときにTを推論できないので明示的な指定が必要
+msort((x: Char, y: Char) => x > y)("abcde".toList)
+"abcde".toList sortWith (_ > _)
+
+// 引数の順番を逆にすると第一引数でTの型が定まるので型推論が成功する
+def msortSwapped[T](xs: List[T])(less: (T, T) => Boolean) : List[T] = msort(less)(xs)
+msortSwapped("abcde".toList)(_ > _)
+
+// 関数を引数に取るパラメーターはパラメーターリストの最後に置くと利用しやすい
+
+// 下記でList[T]を宣言する必要があるのは、指定しないとList[Nothing]になってしまうから
+def flattenRight[T](xss: List[List[T]]) = xss.foldRight(List[T]()){(x, y) =>
+  println(s"x: $x y: $y")
+  x ::: y
+}
+
+// 16.11 まとめ
