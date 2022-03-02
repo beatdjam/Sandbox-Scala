@@ -18,16 +18,23 @@ class SlowHeadQueue[T](smele: List[T]) {
 }
 
 // 前後それぞれから並べた要素を持つことで解決できる
-// TODO あとでもう一度読む
+// enqueueのときは逆順のリストの先頭に追加し続け、取り出すタイミングで反転させてそのheadやtailを利用する
 class Queue[T](private val leading: List[T], private val trailing: List[T]) {
   private def mirror =
     if (leading.isEmpty) new Queue(trailing.reverse, Nil) else this
 
+  // 前から並べたリストの先頭を取得
   def head = mirror.leading.head
+  // 前から並べたリストの先頭要素を取り除いたものと、逆順のリストから新しいQueueを生成
   def tail = {
     val q = mirror
     new Queue(q.leading.tail, q.trailing)
   }
 
+  // 前から並べたリストと、先頭に新しい要素を追加した逆順のリストで新しいQueueを作成
   def enqueue(x: T) = new Queue(leading, x :: trailing)
 }
+
+val q = new Queue(List("one", "two", "three"), Nil)
+q.enqueue("four").head
+q.enqueue("four").tail.head
