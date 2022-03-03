@@ -38,3 +38,36 @@ class Queue[T](private val leading: List[T], private val trailing: List[T]) {
 val q = new Queue(List("one", "two", "three"), Nil)
 q.enqueue("four").head
 q.enqueue("four").tail.head
+
+// 19.2 情報隠蔽
+// 19.2.1 privateコンストラクターとファクトリメソッド
+class Queue[T] private (private val leading: List[T], private val trailing: List[T])
+// T*は連続パラメーターを表す記法
+object Queue {
+  def apply[T](xs: T*) = new Queue[T](xs.toList, Nil)
+}
+
+// 19.2.2 privateクラスというもう一つの方法
+trait Queue[T] {
+  def head: T
+  def tail: Queue[T]
+  def enqueue(x: T): Queue[T]
+}
+object Queue {
+  def apply[T](xs: T*): Queue[T] = new QueueImpl[T](xs.toList, Nil)
+  private class QueueImpl[T](private val leading: List[T], private val trailing: List[T]) extends Queue[T] {
+    private def mirror =
+      if (leading.isEmpty) new QueueImpl(trailing.reverse, Nil) else this
+
+    // 前から並べたリストの先頭を取得
+    def head = mirror.leading.head
+    // 前から並べたリストの先頭要素を取り除いたものと、逆順のリストから新しいQueueを生成
+    def tail = {
+      val q = mirror
+      new QueueImpl(q.leading.tail, q.trailing)
+    }
+
+    // 前から並べたリストと、先頭に新しい要素を追加した逆順のリストで新しいQueueを作成
+    def enqueue(x: T) = new QueueImpl(leading, x :: trailing)
+  }
+}
