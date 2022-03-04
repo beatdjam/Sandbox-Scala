@@ -71,3 +71,16 @@ object Queue {
     def enqueue(x: T) = new QueueImpl(leading, x :: trailing)
   }
 }
+
+// 19.3 変位指定アノテーション
+// Queueはtraitなので型として扱えないが、パラメータ化された型を定義できる
+// このような振る舞いをするものを方コンストラクターとも呼ぶ
+// def doesNotCompile(q: Queue)
+def doesCompile(q: Queue[AnyRef]): Unit
+
+// 型パラメータは基本的に非変なので、Queue[String]とQueue[AnyRef]はサブ型の関係にない
+// traitをQueue[+T]のように記述することで共変にできる
+// traitをQueue[-T]のように記述することで反変にできる
+
+// 19.3.1 変位指定と配列
+// Javaは歴史的経緯によりArrayが共変だが、Scalaは非変になっている
