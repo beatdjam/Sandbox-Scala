@@ -84,3 +84,9 @@ def doesCompile(q: Queue[AnyRef]): Unit
 
 // 19.3.1 変位指定と配列
 // Javaは歴史的経緯によりArrayが共変だが、Scalaは非変になっている
+
+// 19.4 変位指定アノテーションのチェック
+// 再代入のフィールドに対する共変など、ランタイムエラーが起きうる変位指定はコンパイラによってチェックされる
+// Queue[+T]のような宣言をしたとき、Queue[Any] = Queue[Int]が成り立ってしまう。
+// Queue[Any].enqueueにはQueue[String]をenqueueできてしまい、エラーが起きる可能性がある
+// こういった実装はコンパイルに失敗する
