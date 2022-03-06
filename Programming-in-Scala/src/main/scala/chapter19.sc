@@ -90,3 +90,12 @@ def doesCompile(q: Queue[AnyRef]): Unit
 // Queue[+T]のような宣言をしたとき、Queue[Any] = Queue[Int]が成り立ってしまう。
 // Queue[Any].enqueueにはQueue[String]をenqueueできてしまい、エラーが起きる可能性がある
 // こういった実装はコンパイルに失敗する
+
+// 19.5 下限境界
+// TをUの下限境界にしているので、UはTのsuper typeである必要がある
+// Tが下限境界になることで、Tを共変にしたときに起きていた問題が解決でき、下記のような記述ができる
+trait Queue[+T] {
+  def head: T
+  def tail: Queue[T]
+  def enqueue[U >: T](x: U): Queue[U]
+}
