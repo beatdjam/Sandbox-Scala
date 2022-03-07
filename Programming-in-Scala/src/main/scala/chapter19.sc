@@ -99,3 +99,38 @@ trait Queue[+T] {
   def tail: Queue[T]
   def enqueue[U >: T](x: U): Queue[U]
 }
+
+// 19.6 反変
+// AnyRefをwriteできる場合Stringもwriteできる
+trait OutputChannel[-T] {
+  def write(x: T): Unit
+}
+
+// S => Tの関数を書いたとき下記のようなtraitに読み替えられる
+trait Function1[-S, +T] {
+  def apply(x:S): T
+}
+
+// 例
+// Library.printBookListはBook => AnyRefだけど、
+// CustomerではPublication => Stringとして使ってる
+// StringはAnyRefのサブ型、PublicationはBookのスーパー型なのでこれらは許容される
+// Function1[-S, +T]なのでこれらが成り立つ
+class Publication(val title: String)
+class Book(title: String) extends Publication(title)
+
+object Library {
+  val books: Set[Book] = Set(
+    new Book("A"),
+    new Book("B")
+  )
+
+  def printBookList(info: Book => AnyRef): Unit = {
+    for (book <- books) println(info(book))
+  }
+}
+
+object Customer extends App {
+  def getTitle(p: Publication): String = p.title
+  Library.printBookList(getTitle)
+}
