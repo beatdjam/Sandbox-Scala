@@ -134,3 +134,38 @@ object Customer extends App {
   def getTitle(p: Publication): String = p.title
   Library.printBookList(getTitle)
 }
+
+// 非変
+class Hoge[T]
+val hoge: Hoge[String] = new Hoge[String]
+// 共変
+class Hoge[+T]
+val hoge: Hoge[AnyRef] = new Hoge[String]
+// 反変
+class Hoge[-T]
+val hoge: Hoge[String] = new Hoge[AnyRef]
+
+// 19.7 object-privateデータ
+// object-privateでの宣言によって、+Tの共変の宣言が可能になっている
+// leading, trailingがvarになり、再代入で反転を表現することで、n回繰り返してもleadingが枯渇しない
+// そのため、trailing.reverseが実行されることによるパフォーマンス劣化も起きない
+class Queue[+T](private[this] var leading: List[T], private[this] var trailing: List[T]) {
+  private def mirror(): Unit = if (leading.isEmpty) {
+    while (trailing.nonEmpty) {
+      leading = trailing.head :: leading
+      trailing = trailing.tail
+    }
+  }
+
+  def head = {
+    mirror()
+    leading.head
+  }
+
+  def tail: Queue[T] = {
+    mirror()
+    new Queue(leading.tail, trailing)
+  }
+
+  def enqueue[U >: T](x: U) = new Queue[U](leading, x :: trailing)
+}
