@@ -2,16 +2,22 @@ package lexer
 
 import token.{
   ASSIGN,
+  ASTERISK,
+  BANG,
   COMMA,
   EOF,
+  GT,
   ILLEGAL,
   INT,
   LBRACE,
   LPAREN,
+  LT,
+  MINUS,
   PLUS,
   RBRACE,
   RPAREN,
   SEMICOLON,
+  SLASH,
   Token
 }
 
@@ -29,6 +35,27 @@ case class Lexer private (input: String) {
       case Some("=") =>
         readChar()
         Token(ASSIGN, "=")
+      case Some("+") =>
+        readChar()
+        Token(PLUS, "+")
+      case Some("-") =>
+        readChar()
+        Token(MINUS, "-")
+      case Some("!") =>
+        readChar()
+        Token(BANG, "!")
+      case Some("/") =>
+        readChar()
+        Token(SLASH, "/")
+      case Some("*") =>
+        readChar()
+        Token(ASTERISK, "*")
+      case Some("<") =>
+        readChar()
+        Token(GT, "<")
+      case Some(">") =>
+        readChar()
+        Token(LT, ">")
       case Some(";") =>
         readChar()
         Token(SEMICOLON, ";")
@@ -41,9 +68,6 @@ case class Lexer private (input: String) {
       case Some(",") =>
         readChar()
         Token(COMMA, ",")
-      case Some("+") =>
-        readChar()
-        Token(PLUS, "+")
       case Some("{") =>
         readChar()
         Token(LBRACE, "{")
