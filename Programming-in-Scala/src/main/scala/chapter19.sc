@@ -169,3 +169,17 @@ class Queue[+T](private[this] var leading: List[T], private[this] var trailing: 
 
   def enqueue[U >: T](x: U) = new Queue[U](leading, x :: trailing)
 }
+
+// 1,2,3 , Nil
+// enqueue
+// 1,2,3 , 4
+// enqueue
+// 1,2,3 , 5,4
+// head
+// 1
+// tail
+// 2,3 , 5,4
+// tail
+// 3 , 5,4
+// tail
+// 4,5 , Nil
