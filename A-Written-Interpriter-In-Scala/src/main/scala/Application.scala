@@ -6,10 +6,9 @@ import scala.util.control.Breaks.{break, breakable}
 
 object Application {
   def main(args: Array[String]): Unit = {
-    val prompt = ">>"
     println("This is the Monkey programming language!")
     while (true) {
-      val input = readLine(prompt)
+      val input = readLine(">>")
       if (input == "") return
 
       val lexer = Lexer.from(input)
