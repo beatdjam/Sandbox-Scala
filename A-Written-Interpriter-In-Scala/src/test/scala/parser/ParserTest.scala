@@ -1,9 +1,10 @@
 package parser
 
-import ast.{LetStatement, ReturnStatement}
+import ast.{Identifier, LetStatement, Program, ReturnStatement}
 import lexer.Lexer
 import org.scalatest.FunSpec
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
+import token.{IDENT, LET, Token}
 
 class ParserTest extends FunSpec {
 
@@ -53,6 +54,21 @@ class ParserTest extends FunSpec {
           fail("invalid statement")
       }
     }
+  }
+
+  it("test string") {
+    val program = Program(
+      Seq(
+        Some(
+          LetStatement(
+            Token(LET, "let"),
+            Identifier(Token(IDENT, "myVar"), "myVar"),
+            Some(Identifier(Token(IDENT, "anotherVar"), "anotherVar"))
+          )
+        )
+      )
+    )
+    program.getString mustEqual "let myVar = anotherVar;"
   }
 
   def checkParserErrors(parser: Parser): Unit = {
