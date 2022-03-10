@@ -26,3 +26,8 @@ case class LetStatement(
     name: Identifier,
     value: Option[Expression]
 ) extends Statement
+
+case class ReturnStatement(
+    token: Token,
+    returnValue: Option[Expression]
+) extends Statement

@@ -1,8 +1,8 @@
 package parser
 
-import ast.{Identifier, LetStatement, Program, Statement}
+import ast.{Identifier, LetStatement, Program, ReturnStatement, Statement}
 import lexer.Lexer
-import token.{ASSIGN, EOF, IDENT, LET, SEMICOLON, Token, TokenType}
+import token.{ASSIGN, EOF, IDENT, LET, RETURN, SEMICOLON, Token, TokenType}
 
 import scala.collection.mutable.ListBuffer
 
@@ -30,8 +30,9 @@ case class Parser private (
 
   private def parseStatement(): Option[Statement] = {
     curToken.tokenType match {
-      case LET => parseLetStatement()
-      case _   => None
+      case LET    => parseLetStatement()
+      case RETURN => parseReturnStatement()
+      case _      => None
     }
   }
 
@@ -52,6 +53,12 @@ case class Parser private (
         Some(stmt)
       } else None
     } else None
+  }
+
+  def parseReturnStatement(): Option[ReturnStatement] = {
+    val current = curToken
+    while (!curTokenIs(SEMICOLON)) nextToken()
+    Some(ReturnStatement(current, None))
   }
 
   private def curTokenIs(tokenType: TokenType): Boolean =
