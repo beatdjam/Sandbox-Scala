@@ -22,7 +22,6 @@ import token.{
 }
 
 case class Lexer private (input: String) {
-  private var position: Int = 0
   private var readPosition: Int = 0
 
   private def ch =
@@ -31,64 +30,27 @@ case class Lexer private (input: String) {
   def nextToken(): Token = {
     skipWhiteSpace()
 
-    ch match {
-      case Some("=") =>
+    ch.map {
+      case ch @ ("=" | "+" | "-" | "!" | "/" | "*" | "<" | ">") =>
         readChar()
-        Token(ASSIGN, "=")
-      case Some("+") =>
+        Token.fromOperatorLiteral(ch)
+      case ch @ ("," | ";" | "(" | ")" | "{" | "}") =>
         readChar()
-        Token(PLUS, "+")
-      case Some("-") =>
-        readChar()
-        Token(MINUS, "-")
-      case Some("!") =>
-        readChar()
-        Token(BANG, "!")
-      case Some("/") =>
-        readChar()
-        Token(SLASH, "/")
-      case Some("*") =>
-        readChar()
-        Token(ASTERISK, "*")
-      case Some("<") =>
-        readChar()
-        Token(GT, "<")
-      case Some(">") =>
-        readChar()
-        Token(LT, ">")
-      case Some(";") =>
-        readChar()
-        Token(SEMICOLON, ";")
-      case Some("(") =>
-        readChar()
-        Token(LPAREN, "(")
-      case Some(")") =>
-        readChar()
-        Token(RPAREN, ")")
-      case Some(",") =>
-        readChar()
-        Token(COMMA, ",")
-      case Some("{") =>
-        readChar()
-        Token(LBRACE, "{")
-      case Some("}") =>
-        readChar()
-        Token(RBRACE, "}")
-      case Some(str) =>
-        if (isLetter(str)) {
-          val literal = readIdentifier()
-          Token.fromLiteral(literal)
-        } else if (isDigit(str)) {
-          val literal = readNumber()
-          Token(INT, literal)
-        } else Token(ILLEGAL, str)
-      case _ =>
-        readChar()
-        Token(EOF, "")
+        Token.fromDelimiterLiteral(ch)
+      case str if isLetter(str) =>
+        val literal = read(isLetter)
+        Token.fromLiteral(literal)
+      case str if isDigit(str) =>
+        val literal = read(isDigit)
+        Token(INT, literal)
+      case str =>
+        Token(ILLEGAL, str)
+    }.getOrElse {
+      readChar()
+      Token(EOF, "")
     }
   }
   private def readChar(): Unit = {
-    position = readPosition
     readPosition = readPosition + 1
   }
 
@@ -110,18 +72,11 @@ case class Lexer private (input: String) {
     ch.forall(list.contains)
   }
 
-  private def readIdentifier(): String = {
+  private def read(fn: String => Boolean): String = {
     val currentPosition = readPosition
-    while (ch.exists(isLetter)) readChar()
+    while (ch.exists(fn)) readChar()
     input.substring(currentPosition, readPosition)
   }
-
-  private def readNumber(): String = {
-    val currentPosition = readPosition
-    while (ch.exists(isDigit)) readChar()
-    input.substring(currentPosition, readPosition)
-  }
-
 }
 
 object Lexer {

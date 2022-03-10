@@ -15,6 +15,32 @@ object Token {
     }
     Token(tokenType, literal)
   }
+  def fromOperatorLiteral(literal: String): Token = {
+    val tokenType = literal match {
+      case "=" => ASSIGN
+      case "+" => PLUS
+      case "-" => MINUS
+      case "!" => BANG
+      case "/" => SLASH
+      case "*" => ASTERISK
+      case "<" => GT
+      case ">" => LT
+      case _   => throw new IllegalArgumentException("invalid operator")
+    }
+    Token(tokenType, literal)
+  }
+  def fromDelimiterLiteral(literal: String): Token = {
+    val tokenType = literal match {
+      case "," => COMMA
+      case ";" => SEMICOLON
+      case "(" => LPAREN
+      case ")" => RPAREN
+      case "{" => LBRACE
+      case "}" => RBRACE
+      case _   => throw new IllegalArgumentException("invalid operator")
+    }
+    Token(tokenType, literal)
+  }
 }
 
 sealed abstract class TokenType(val token: String)
@@ -35,7 +61,7 @@ case object LT extends TokenType("<")
 case object GT extends TokenType(">")
 
 // デリミタ
-case object COMMA extends TokenType(".")
+case object COMMA extends TokenType(",")
 case object SEMICOLON extends TokenType(";")
 case object LPAREN extends TokenType("(")
 case object RPAREN extends TokenType(")")
