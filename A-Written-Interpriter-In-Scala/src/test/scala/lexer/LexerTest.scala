@@ -40,7 +40,7 @@ class LexerTest extends FunSpec {
           |};
           |
           |let result = add(five, ten);
-          |!-/*5;
+          |_!-/*5;
           |5 < 10 > 5;
           |
           |if (5 < 10) {
@@ -48,6 +48,9 @@ class LexerTest extends FunSpec {
           |} else {
           | return false;
           |}
+          |
+          |10 == 10;
+          |10 != 9;
           |""".stripMargin
       val list = Seq(
         (LET, "let"),
@@ -86,6 +89,7 @@ class LexerTest extends FunSpec {
         (IDENT, "ten"),
         (RPAREN, ")"),
         (SEMICOLON, ";"),
+        (IDENT, "_"),
         (BANG, "!"),
         (MINUS, "-"),
         (SLASH, "/"),
@@ -115,6 +119,14 @@ class LexerTest extends FunSpec {
         (FALSE, "false"),
         (SEMICOLON, ";"),
         (RBRACE, "}"),
+        (INT, "10"),
+        (EQ, "=="),
+        (INT, "10"),
+        (SEMICOLON, ";"),
+        (INT, "10"),
+        (NOT_EQ, "!="),
+        (INT, "9"),
+        (SEMICOLON, ";"),
         (EOF, "")
       )
 

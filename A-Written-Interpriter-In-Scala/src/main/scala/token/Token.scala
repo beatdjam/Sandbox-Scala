@@ -37,7 +37,7 @@ object Token {
       case ")" => RPAREN
       case "{" => LBRACE
       case "}" => RBRACE
-      case _   => throw new IllegalArgumentException("invalid operator")
+      case _   => throw new IllegalArgumentException("invalid delimiter")
     }
     Token(tokenType, literal)
   }
@@ -60,6 +60,8 @@ case object ASTERISK extends TokenType("*")
 case object SLASH extends TokenType("/")
 case object LT extends TokenType("<")
 case object GT extends TokenType(">")
+case object EQ extends TokenType("==")
+case object NOT_EQ extends TokenType("!=")
 
 // デリミタ
 case object COMMA extends TokenType(",")

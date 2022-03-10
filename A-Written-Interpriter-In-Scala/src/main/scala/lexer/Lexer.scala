@@ -1,6 +1,6 @@
 package lexer
 
-import token.{EOF, ILLEGAL, INT, Token}
+import token.{EOF, EQ, ILLEGAL, INT, NOT_EQ, Token}
 
 case class Lexer private (input: String) {
   private var readPosition: Int = 0
@@ -9,10 +9,20 @@ case class Lexer private (input: String) {
     if (readPosition < input.length) Some(input(readPosition).toString)
     else None
 
+  private def peekCh =
+    if (readPosition + 1 < input.length) Some(input(readPosition + 1).toString)
+    else None
+
   def nextToken(): Token = {
     skipWhiteSpace()
 
     ch.map {
+      case "=" if peekCh.contains("=") =>
+        readChar(2)
+        Token(EQ, "==")
+      case "!" if peekCh.contains("=") =>
+        readChar(2)
+        Token(NOT_EQ, "!=")
       case ch @ ("=" | "+" | "-" | "!" | "/" | "*" | "<" | ">") =>
         readChar()
         Token.fromOperatorLiteral(ch)
@@ -34,8 +44,8 @@ case class Lexer private (input: String) {
     }
   }
 
-  private def readChar(): Unit = {
-    readPosition = readPosition + 1
+  private def readChar(count: Int = 1): Unit = {
+    readPosition = readPosition + count
   }
 
   private def skipWhiteSpace(): Unit = {
