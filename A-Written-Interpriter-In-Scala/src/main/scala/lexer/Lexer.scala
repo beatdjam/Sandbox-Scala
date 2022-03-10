@@ -27,6 +27,7 @@ case class Lexer private (input: String) {
   private def ch =
     if (readPosition < input.length) Some(input(readPosition).toString)
     else None
+
   def nextToken(): Token = {
     skipWhiteSpace()
 
@@ -44,12 +45,14 @@ case class Lexer private (input: String) {
         val literal = read(isDigit)
         Token(INT, literal)
       case str =>
+        readChar()
         Token(ILLEGAL, str)
     }.getOrElse {
       readChar()
       Token(EOF, "")
     }
   }
+
   private def readChar(): Unit = {
     readPosition = readPosition + 1
   }
