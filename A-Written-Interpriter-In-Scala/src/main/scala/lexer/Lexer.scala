@@ -1,25 +1,6 @@
 package lexer
 
-import token.{
-  ASSIGN,
-  ASTERISK,
-  BANG,
-  COMMA,
-  EOF,
-  GT,
-  ILLEGAL,
-  INT,
-  LBRACE,
-  LPAREN,
-  LT,
-  MINUS,
-  PLUS,
-  RBRACE,
-  RPAREN,
-  SEMICOLON,
-  SLASH,
-  Token
-}
+import token.{EOF, ILLEGAL, INT, Token}
 
 case class Lexer private (input: String) {
   private var readPosition: Int = 0
@@ -38,10 +19,10 @@ case class Lexer private (input: String) {
       case ch @ ("," | ";" | "(" | ")" | "{" | "}") =>
         readChar()
         Token.fromDelimiterLiteral(ch)
-      case str if isLetter(str) =>
+      case ch if isLetter(ch) =>
         val literal = read(isLetter)
         Token.fromLiteral(literal)
-      case str if isDigit(str) =>
+      case ch if isDigit(ch) =>
         val literal = read(isDigit)
         Token(INT, literal)
       case str =>
