@@ -4,6 +4,7 @@ import ast.{
   Expression,
   ExpressionStatement,
   Identifier,
+  InfixExpression,
   IntegerLiteral,
   LetStatement,
   PrefixExpression,
@@ -14,14 +15,21 @@ import ast.{
 import lexer.Lexer
 import token.{
   ASSIGN,
+  ASTERISK,
   BANG,
   EOF,
+  EQ,
+  GT,
   IDENT,
   INT,
   LET,
+  LT,
   MINUS,
+  NOT_EQ,
+  PLUS,
   RETURN,
   SEMICOLON,
+  SLASH,
   Token,
   TokenType
 }
@@ -29,7 +37,7 @@ import token.{
 import scala.collection.mutable.ListBuffer
 
 object Priority extends Enumeration {
-  val LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL = Value
+  val LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL = Value.id
 }
 
 case class Parser private (
@@ -37,9 +45,6 @@ case class Parser private (
     var curToken: Token,
     var peekToken: Token
 ) {
-  type InfixParseFn = Expression => Expression
-  var infixParseFns: Map[TokenType, InfixParseFn] = Map.empty
-
   private val _errors = ListBuffer.empty[String]
   def errors: Seq[String] = _errors.toList
 
@@ -97,7 +102,23 @@ case class Parser private (
     Some(ExpressionStatement(current, expression))
   }
 
-  private def parseExpression(priority: Priority.Value): Option[Expression] = {
+  private def parseExpression(precedence: Int): Option[Expression] = {
+    val precedences: Map[TokenType, Int] = Map(
+      EQ -> Priority.EQUALS,
+      NOT_EQ -> Priority.EQUALS,
+      LT -> Priority.LESSGREATER,
+      GT -> Priority.LESSGREATER,
+      PLUS -> Priority.SUM,
+      MINUS -> Priority.SUM,
+      SLASH -> Priority.PRODUCT,
+      ASTERISK -> Priority.PRODUCT
+    )
+    def peekPrecedence(): Int =
+      precedences.getOrElse(peekToken.tokenType, Priority.LOWEST)
+
+    def curPrecedence(): Int =
+      precedences.getOrElse(curToken.tokenType, Priority.LOWEST)
+
     def parseIntegerLiteral(): Expression =
       IntegerLiteral(curToken, curToken.literal.toInt)
 
@@ -115,7 +136,29 @@ case class Parser private (
       }
     }
 
-    curToken.tokenType match {
+    def parseInfixExpression(left: Expression): Option[Expression] = {
+      val current = curToken
+      val precedence = curPrecedence()
+      nextToken()
+      parseExpression(precedence) match {
+        case Some(right) =>
+          Some(InfixExpression(current, left, current.literal, right))
+        case None => None
+      }
+    }
+
+    // NOTE: 先読みしたtokenがinfixのとき、セミコロンか現在より優先度の高い演算子がくるまでループする
+    def getExpression(leftExp: Option[Expression]): Option[Expression] = {
+      leftExp.flatMap { left =>
+        if (!peekTokenIs(token.SEMICOLON) && precedence < peekPrecedence) {
+          nextToken()
+          val newLeft = parseInfixExpression(left)
+          getExpression(newLeft)
+        } else Some(left)
+      }
+    }
+
+    val leftExp = curToken.tokenType match {
       case IDENT        => Some(parseIdentifier())
       case INT          => Some(parseIntegerLiteral())
       case BANG | MINUS => parsePrefixExpression()
@@ -124,6 +167,11 @@ case class Parser private (
           s"no prefix parse function for ${curToken.tokenType.token} found"
         )
         None
+    }
+    peekToken.tokenType match {
+      case PLUS | MINUS | SLASH | ASTERISK | EQ | NOT_EQ | LT | GT =>
+        getExpression(leftExp)
+      case _ => leftExp
     }
   }
 

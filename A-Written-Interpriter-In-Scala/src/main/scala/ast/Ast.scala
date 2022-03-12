@@ -60,3 +60,12 @@ case class PrefixExpression(token: Token, operator: String, right: Expression)
     extends Expression {
   override def getString: String = s"($operator${right.getString})"
 }
+case class InfixExpression(
+    token: Token,
+    left: Expression,
+    operator: String,
+    right: Expression
+) extends Expression {
+  override def getString: String =
+    s"(${left.getString} $operator ${right.getString})"
+}

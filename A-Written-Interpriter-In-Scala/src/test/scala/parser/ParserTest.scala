@@ -3,6 +3,7 @@ package parser
 import ast.{
   ExpressionStatement,
   Identifier,
+  InfixExpression,
   IntegerLiteral,
   LetStatement,
   PrefixExpression,
@@ -135,21 +136,85 @@ class ParserTest extends FunSpec {
         }
       }
     }
+    it("infix expression") {
+      // input, operator, integerValue
+      val list = Seq(
+        ("5 + 5;", 5, "+", 5),
+        ("5 - 5;", 5, "-", 5),
+        ("5 * 5;", 5, "*", 5),
+        ("5 / 5;", 5, "/", 5),
+        ("5 > 5;", 5, ">", 5),
+        ("5 < 5;", 5, "<", 5),
+        ("5 == 5;", 5, "==", 5),
+        ("5 != 5;", 5, "!=", 5)
+      )
+      list.foreach { case (input, leftValue, operator, rightValue) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.length mustEqual 1
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[InfixExpression]
+            expression.operator mustEqual operator
+
+            val left = expression.left.asInstanceOf[IntegerLiteral]
+            left.value mustEqual leftValue
+            left.tokenLiteral() mustEqual leftValue.toString
+
+            val right = expression.right.asInstanceOf[IntegerLiteral]
+            right.value mustEqual rightValue
+            right.tokenLiteral() mustEqual rightValue.toString
+          case _ =>
+            fail("invalid statement")
+        }
+      }
+    }
+
+    it("operator precedence") {
+      val list = Seq(
+        ("-a * b", "((-a) * b)"),
+        ("!-a", "(!(-a))"),
+        ("a + b + c", "((a + b) + c)"),
+        ("a + b - c", "((a + b) - c)"),
+        ("a * b * c", "((a * b) * c)"),
+        ("a * b / c", "((a * b) / c)"),
+        ("a + b / c", "(a + (b / c))"),
+        ("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
+        ("3 + 4; -5 * 5", "(3 + 4)\n((-5) * 5)"),
+        ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+        ("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
+        ("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))")
+      )
+      list.foreach { case (input, expected) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+        program.getString mustEqual expected
+      }
+    }
   }
 
-  describe("test string") {
-    val program = Program(
-      Seq(
-        Some(
-          LetStatement(
-            Token(LET, "let"),
-            Identifier(Token(IDENT, "myVar"), "myVar"),
-            Some(Identifier(Token(IDENT, "anotherVar"), "anotherVar"))
+  describe("parse") {
+    it("Program to Object") {
+      val program = Program(
+        Seq(
+          Some(
+            LetStatement(
+              Token(LET, "let"),
+              Identifier(Token(IDENT, "myVar"), "myVar"),
+              Some(Identifier(Token(IDENT, "anotherVar"), "anotherVar"))
+            )
           )
         )
       )
-    )
-    program.getString mustEqual "let myVar = anotherVar;"
+      program.getString mustEqual "let myVar = anotherVar;"
+    }
+
   }
 
   def checkParserErrors(parser: Parser): Unit = {
