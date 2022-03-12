@@ -27,6 +27,11 @@ case class Program(statements: Seq[Option[Statement]]) extends Node {
 case class Identifier(token: Token, value: String) extends Expression {
   override def getString: String = value
 }
+
+case class IntegerLiteral(token: Token, value: Int) extends Expression {
+  override def getString: String = value.toString
+}
+
 case class LetStatement(
     token: Token,
     name: Identifier,

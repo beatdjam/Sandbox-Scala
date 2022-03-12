@@ -3,6 +3,7 @@ package parser
 import ast.{
   ExpressionStatement,
   Identifier,
+  IntegerLiteral,
   LetStatement,
   Program,
   ReturnStatement
@@ -81,7 +82,28 @@ class ParserTest extends FunSpec {
           statement.get.tokenLiteral() mustEqual "foobar"
           val ident = statement.get.expression.get.asInstanceOf[Identifier]
           ident.value mustEqual "foobar"
-        // TODO Valueのテスト
+          ident.tokenLiteral() mustEqual "foobar"
+        case _ =>
+          fail("invalid statement")
+      }
+    }
+    it("digit expression") {
+      val input =
+        """
+          |5;
+          |""".stripMargin
+
+      val lexer = Lexer.from(input)
+      val parser = Parser.from(lexer)
+      val program = parser.parseProgram()
+      checkParserErrors(parser)
+
+      program.statements.length mustEqual 1
+      program.statements.foreach {
+        case statement: Some[ExpressionStatement] =>
+          val ident = statement.get.expression.get.asInstanceOf[IntegerLiteral]
+          ident.value mustEqual 5
+          ident.tokenLiteral() mustEqual "5"
         case _ =>
           fail("invalid statement")
       }

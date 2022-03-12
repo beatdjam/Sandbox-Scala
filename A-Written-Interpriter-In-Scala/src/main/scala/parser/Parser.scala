@@ -4,13 +4,14 @@ import ast.{
   Expression,
   ExpressionStatement,
   Identifier,
+  IntegerLiteral,
   LetStatement,
   Program,
   ReturnStatement,
   Statement
 }
 import lexer.Lexer
-import token.{ASSIGN, EOF, IDENT, LET, RETURN, SEMICOLON, Token, TokenType}
+import token.{ASSIGN, EOF, IDENT, INT, LET, RETURN, SEMICOLON, Token, TokenType}
 
 import scala.collection.mutable.ListBuffer
 
@@ -23,12 +24,8 @@ case class Parser private (
     var curToken: Token,
     var peekToken: Token
 ) {
-  type PrefixParseFn = () => Expression
   type InfixParseFn = Expression => Expression
 
-  var prefixParseFns: Map[TokenType, PrefixParseFn] = Map(
-    IDENT -> parseIdentifier
-  )
   var infixParseFns: Map[TokenType, InfixParseFn] = Map.empty
 
   private val _errors = ListBuffer.empty[String]
@@ -65,14 +62,19 @@ case class Parser private (
     Some(ExpressionStatement(current, expression))
   }
 
-  private def parseExpression(priority: Priority.Value): Option[Expression] =
-    prefixParseFns.get(curToken.tokenType) match {
-      case Some(prefix) => Some(prefix())
-      case None         => None
-    }
+  private def parseExpression(priority: Priority.Value): Option[Expression] = {
+    def parseIntegerLiteral(): Expression =
+      IntegerLiteral(curToken, curToken.literal.toInt)
 
-  private def parseIdentifier(): Expression =
-    Identifier(curToken, curToken.literal)
+    def parseIdentifier(): Expression =
+      Identifier(curToken, curToken.literal)
+
+    curToken.tokenType match {
+      case IDENT => Some(parseIdentifier())
+      case INT   => Some(parseIntegerLiteral())
+      case _     => None
+    }
+  }
 
   private def parseLetStatement(): Option[LetStatement] = {
     // letのステートメント
@@ -93,7 +95,7 @@ case class Parser private (
     } else None
   }
 
-  def parseReturnStatement(): Option[ReturnStatement] = {
+  private def parseReturnStatement(): Option[ReturnStatement] = {
     val current = curToken
     while (!curTokenIs(SEMICOLON)) nextToken()
     Some(ReturnStatement(current, None))
