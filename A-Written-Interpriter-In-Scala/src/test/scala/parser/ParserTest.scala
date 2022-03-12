@@ -1,6 +1,7 @@
 package parser
 
 import ast.{
+  BooleanExpression,
   ExpressionStatement,
   Identifier,
   InfixExpression,
@@ -174,6 +175,27 @@ class ParserTest extends FunSpec {
       }
     }
 
+    it("boolean expression") {
+      // input, operator, integerValue
+      val list = Seq(("true;", true), ("false;", false))
+      list.foreach { case (input, boolean) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.length mustEqual 1
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[BooleanExpression]
+            expression.value mustEqual boolean
+          case _ =>
+            fail("invalid statement")
+        }
+      }
+    }
+
     it("operator precedence") {
       val list = Seq(
         ("-a * b", "((-a) * b)"),
@@ -187,7 +209,19 @@ class ParserTest extends FunSpec {
         ("3 + 4; -5 * 5", "(3 + 4)\n((-5) * 5)"),
         ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
         ("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
-        ("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))")
+        (
+          "3 + 4 * 5 == 3 * 1 + 4 * 5",
+          "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"
+        ),
+        ("true", "true"),
+        ("false", "false"),
+        ("3 > 5 == false", "((3 > 5) == false)"),
+        ("3 < 5 == true", "((3 < 5) == true)"),
+        ("1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"),
+        ("(5 + 5) * 2", "((5 + 5) * 2)"),
+        ("2 / (5 + 5)", "(2 / (5 + 5))"),
+        ("-(5 + 5)", "(-(5 + 5))"),
+        ("(!(true == true))", "(!(true == true))")
       )
       list.foreach { case (input, expected) =>
         val lexer = Lexer.from(input)

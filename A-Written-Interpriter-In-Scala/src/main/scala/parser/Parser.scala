@@ -1,6 +1,7 @@
 package parser
 
 import ast.{
+  BooleanExpression,
   Expression,
   ExpressionStatement,
   Identifier,
@@ -19,10 +20,12 @@ import token.{
   BANG,
   EOF,
   EQ,
+  FALSE,
   GT,
   IDENT,
   INT,
   LET,
+  LPAREN,
   LT,
   MINUS,
   NOT_EQ,
@@ -30,6 +33,7 @@ import token.{
   RETURN,
   SEMICOLON,
   SLASH,
+  TRUE,
   Token,
   TokenType
 }
@@ -122,6 +126,16 @@ case class Parser private (
     def parseIntegerLiteral(): Expression =
       IntegerLiteral(curToken, curToken.literal.toInt)
 
+    def parseBooleanExpression(): Expression =
+      BooleanExpression(curToken, curToken.tokenType == TRUE)
+
+    def parseGroupedExpression(): Option[Expression] = {
+      nextToken()
+      val exp = parseExpression(Priority.LOWEST)
+      if (expectPeek(token.RPAREN)) exp
+      else None
+    }
+
     def parseIdentifier(): Expression =
       Identifier(curToken, curToken.literal)
 
@@ -147,7 +161,7 @@ case class Parser private (
       }
     }
 
-    // NOTE: 先読みしたtokenがinfixのとき、セミコロンか現在より優先度の高い演算子がくるまでループする
+    // NOTE: 先読みしたtokenがinfixのとき、セミコロンか現在の優先度以下の演算子がくるまでループする
     def getExpression(leftExp: Option[Expression]): Option[Expression] = {
       leftExp.flatMap { left =>
         if (!peekTokenIs(token.SEMICOLON) && precedence < peekPrecedence) {
@@ -161,6 +175,8 @@ case class Parser private (
     val leftExp = curToken.tokenType match {
       case IDENT        => Some(parseIdentifier())
       case INT          => Some(parseIntegerLiteral())
+      case LPAREN       => parseGroupedExpression()
+      case TRUE | FALSE => Some(parseBooleanExpression())
       case BANG | MINUS => parsePrefixExpression()
       case _ =>
         _errors.addOne(

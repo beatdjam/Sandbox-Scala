@@ -69,3 +69,7 @@ case class InfixExpression(
   override def getString: String =
     s"(${left.getString} $operator ${right.getString})"
 }
+
+case class BooleanExpression(token: Token, value: Boolean) extends Expression {
+  override def getString: String = token.literal
+}
