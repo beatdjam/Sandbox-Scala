@@ -5,6 +5,7 @@ import ast.{
   BooleanExpression,
   Expression,
   ExpressionStatement,
+  FunctionLiteral,
   Identifier,
   IfExpression,
   InfixExpression,
@@ -20,10 +21,12 @@ import token.{
   ASSIGN,
   ASTERISK,
   BANG,
+  COMMA,
   ELSE,
   EOF,
   EQ,
   FALSE,
+  FUNCTION,
   GT,
   IDENT,
   IF,
@@ -144,6 +147,20 @@ case class Parser private (
     def parseIntegerLiteral(): Expression =
       IntegerLiteral(curToken, curToken.literal.toInt)
 
+    def parseFunctionLiteral(): Option[Expression] = {
+      val current = curToken
+      if (!expectPeek(LPAREN)) {
+        None
+      } else {
+        val parameters = parseFunctionParameters()
+        if (!expectPeek(LBRACE)) None
+        else {
+          val body = parseBlockStatement()
+          Some(FunctionLiteral(current, parameters, body))
+        }
+      }
+    }
+
     def parseBooleanExpression(): Expression =
       BooleanExpression(curToken, curToken.tokenType == TRUE)
 
@@ -199,6 +216,24 @@ case class Parser private (
       }
     }
 
+    def parseFunctionParameters(): Seq[Identifier] = {
+      if (peekTokenIs(RPAREN)) {
+        nextToken()
+        Nil
+      } else {
+        nextToken()
+        val buf = ListBuffer(Identifier(curToken, curToken.literal))
+        while (peekTokenIs(COMMA)) {
+          nextToken()
+          nextToken()
+          buf.addOne(Identifier(curToken, curToken.literal))
+        }
+
+        if (expectPeek(RPAREN)) buf.toList
+        else Nil
+      }
+    }
+
     // NOTE: 先読みしたtokenがinfixのとき、セミコロンか現在の優先度以下の演算子がくるまでループする
     def getExpression(leftExp: Option[Expression]): Option[Expression] = {
       leftExp.flatMap { left =>
@@ -217,6 +252,7 @@ case class Parser private (
       case TRUE | FALSE => Some(parseBooleanExpression())
       case BANG | MINUS => parsePrefixExpression()
       case IF           => parseIfExpression()
+      case FUNCTION     => parseFunctionLiteral()
       case _ =>
         _errors.addOne(
           s"no prefix parse function for ${curToken.tokenType.token} found"
@@ -245,7 +281,7 @@ case class Parser private (
 
   private def peekError(tokenType: TokenType) = {
     _errors.addOne(
-      s"expected next token to be $tokenType, got $peekToken instead"
+      s"expected next token to be ${tokenType.token}, got ${peekToken.literal} instead"
     )
   }
 }

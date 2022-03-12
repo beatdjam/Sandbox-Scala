@@ -3,6 +3,7 @@ package parser
 import ast.{
   BooleanExpression,
   ExpressionStatement,
+  FunctionLiteral,
   Identifier,
   IfExpression,
   InfixExpression,
@@ -207,7 +208,7 @@ class ParserTest extends FunSpec {
         val parser = Parser.from(lexer)
         val program = parser.parseProgram()
         checkParserErrors(parser)
-
+        program.statements.length mustBe 1
         program.statements.foreach {
           case statement: Some[ExpressionStatement] =>
             val expression =
@@ -217,6 +218,34 @@ class ParserTest extends FunSpec {
             expression.consequence.statements.length mustEqual 1
             expression.consequence.statements.head.get.getString mustEqual consequence
             expression.alternative.map(_.getString) mustEqual alternative
+
+          case _ =>
+            fail("invalid statement")
+        }
+      }
+    }
+
+    it("function literal") {
+      val list = Seq(
+        ("fn(x, y) {x + y}", Seq("x", "y"), "(x + y)"),
+        ("fn() {};", Nil, ""),
+        ("fn(x) {};", Seq("x"), ""),
+        ("fn(x, y, z) {};", Seq("x", "y", "z"), "")
+      )
+      list.foreach { case (input, parameters, body) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.length mustBe 1
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[FunctionLiteral]
+
+            expression.parameters.map(_.getString) mustEqual parameters
+            expression.body.getString mustEqual body
 
           case _ =>
             fail("invalid statement")

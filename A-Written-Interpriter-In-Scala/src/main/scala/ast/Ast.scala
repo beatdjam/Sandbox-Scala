@@ -93,3 +93,12 @@ case class IfExpression(
       .getOrElse("")}
        |""".stripMargin
 }
+
+case class FunctionLiteral(
+    token: Token,
+    parameters: Seq[Identifier],
+    body: BlockStatement
+) extends Expression {
+  override def getString: String =
+    s"${tokenLiteral()}(${parameters.mkString(", ")}) ${body.getString}"
+}
