@@ -1,16 +1,36 @@
 package parser
 
-import ast.{Identifier, LetStatement, Program, ReturnStatement, Statement}
+import ast.{
+  Expression,
+  ExpressionStatement,
+  Identifier,
+  LetStatement,
+  Program,
+  ReturnStatement,
+  Statement
+}
 import lexer.Lexer
 import token.{ASSIGN, EOF, IDENT, LET, RETURN, SEMICOLON, Token, TokenType}
 
 import scala.collection.mutable.ListBuffer
+
+object Priority extends Enumeration {
+  val LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL = Value
+}
 
 case class Parser private (
     lexer: Lexer,
     var curToken: Token,
     var peekToken: Token
 ) {
+  type PrefixParseFn = () => Expression
+  type InfixParseFn = Expression => Expression
+
+  var prefixParseFns: Map[TokenType, PrefixParseFn] = Map(
+    IDENT -> parseIdentifier
+  )
+  var infixParseFns: Map[TokenType, InfixParseFn] = Map.empty
+
   private val _errors = ListBuffer.empty[String]
   def errors: Seq[String] = _errors.toList
 
@@ -32,9 +52,27 @@ case class Parser private (
     curToken.tokenType match {
       case LET    => parseLetStatement()
       case RETURN => parseReturnStatement()
-      case _      => None
+      case _      => parseExpressionStatement()
     }
   }
+
+  private def parseExpressionStatement(): Option[ExpressionStatement] = {
+    val current = curToken
+    val expression = parseExpression(Priority.LOWEST)
+
+    if (peekTokenIs(token.SEMICOLON)) nextToken()
+
+    Some(ExpressionStatement(current, expression))
+  }
+
+  private def parseExpression(priority: Priority.Value): Option[Expression] =
+    prefixParseFns.get(curToken.tokenType) match {
+      case Some(prefix) => Some(prefix())
+      case None         => None
+    }
+
+  private def parseIdentifier(): Expression =
+    Identifier(curToken, curToken.literal)
 
   private def parseLetStatement(): Option[LetStatement] = {
     // letのステートメント

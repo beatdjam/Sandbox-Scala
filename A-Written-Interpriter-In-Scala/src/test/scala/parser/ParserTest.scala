@@ -1,6 +1,12 @@
 package parser
 
-import ast.{Identifier, LetStatement, Program, ReturnStatement}
+import ast.{
+  ExpressionStatement,
+  Identifier,
+  LetStatement,
+  Program,
+  ReturnStatement
+}
 import lexer.Lexer
 import org.scalatest.FunSpec
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
@@ -8,7 +14,7 @@ import token.{IDENT, LET, Token}
 
 class ParserTest extends FunSpec {
 
-  describe("ParserTest") {
+  describe("statements") {
     it("let statements") {
       val input =
         """
@@ -33,6 +39,7 @@ class ParserTest extends FunSpec {
           fail("invalid statement")
       }
     }
+
     it("return statements") {
       val input =
         """
@@ -47,8 +54,8 @@ class ParserTest extends FunSpec {
       checkParserErrors(parser)
 
       program.statements.length mustEqual 3
-      program.statements.zipWithIndex.foreach {
-        case (statement: Some[ReturnStatement], index: Int) =>
+      program.statements.foreach {
+        case statement: Some[ReturnStatement] =>
           statement.get.tokenLiteral() mustEqual "return"
         case _ =>
           fail("invalid statement")
@@ -56,7 +63,32 @@ class ParserTest extends FunSpec {
     }
   }
 
-  it("test string") {
+  describe("expression") {
+    it("identifier expression") {
+      val input =
+        """
+          |foobar;
+          |""".stripMargin
+
+      val lexer = Lexer.from(input)
+      val parser = Parser.from(lexer)
+      val program = parser.parseProgram()
+      checkParserErrors(parser)
+
+      program.statements.length mustEqual 1
+      program.statements.foreach {
+        case statement: Some[ExpressionStatement] =>
+          statement.get.tokenLiteral() mustEqual "foobar"
+          val ident = statement.get.expression.get.asInstanceOf[Identifier]
+          ident.value mustEqual "foobar"
+        // TODO Valueのテスト
+        case _ =>
+          fail("invalid statement")
+      }
+    }
+  }
+
+  describe("test string") {
     val program = Program(
       Seq(
         Some(
