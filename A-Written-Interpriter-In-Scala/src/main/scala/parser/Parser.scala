@@ -6,12 +6,25 @@ import ast.{
   Identifier,
   IntegerLiteral,
   LetStatement,
+  PrefixExpression,
   Program,
   ReturnStatement,
   Statement
 }
 import lexer.Lexer
-import token.{ASSIGN, EOF, IDENT, INT, LET, RETURN, SEMICOLON, Token, TokenType}
+import token.{
+  ASSIGN,
+  BANG,
+  EOF,
+  IDENT,
+  INT,
+  LET,
+  MINUS,
+  RETURN,
+  SEMICOLON,
+  Token,
+  TokenType
+}
 
 import scala.collection.mutable.ListBuffer
 
@@ -25,7 +38,6 @@ case class Parser private (
     var peekToken: Token
 ) {
   type InfixParseFn = Expression => Expression
-
   var infixParseFns: Map[TokenType, InfixParseFn] = Map.empty
 
   private val _errors = ListBuffer.empty[String]
@@ -45,35 +57,10 @@ case class Parser private (
     Program(buf.toList)
   }
 
-  private def parseStatement(): Option[Statement] = {
-    curToken.tokenType match {
-      case LET    => parseLetStatement()
-      case RETURN => parseReturnStatement()
-      case _      => parseExpressionStatement()
-    }
-  }
-
-  private def parseExpressionStatement(): Option[ExpressionStatement] = {
-    val current = curToken
-    val expression = parseExpression(Priority.LOWEST)
-
-    if (peekTokenIs(token.SEMICOLON)) nextToken()
-
-    Some(ExpressionStatement(current, expression))
-  }
-
-  private def parseExpression(priority: Priority.Value): Option[Expression] = {
-    def parseIntegerLiteral(): Expression =
-      IntegerLiteral(curToken, curToken.literal.toInt)
-
-    def parseIdentifier(): Expression =
-      Identifier(curToken, curToken.literal)
-
-    curToken.tokenType match {
-      case IDENT => Some(parseIdentifier())
-      case INT   => Some(parseIntegerLiteral())
-      case _     => None
-    }
+  private def parseStatement(): Option[Statement] = curToken.tokenType match {
+    case LET    => parseLetStatement()
+    case RETURN => parseReturnStatement()
+    case _      => parseExpressionStatement()
   }
 
   private def parseLetStatement(): Option[LetStatement] = {
@@ -99,6 +86,45 @@ case class Parser private (
     val current = curToken
     while (!curTokenIs(SEMICOLON)) nextToken()
     Some(ReturnStatement(current, None))
+  }
+
+  private def parseExpressionStatement(): Option[ExpressionStatement] = {
+    val current = curToken
+    val expression = parseExpression(Priority.LOWEST)
+
+    if (peekTokenIs(token.SEMICOLON)) nextToken()
+
+    Some(ExpressionStatement(current, expression))
+  }
+
+  private def parseExpression(priority: Priority.Value): Option[Expression] = {
+    def parseIntegerLiteral(): Expression =
+      IntegerLiteral(curToken, curToken.literal.toInt)
+
+    def parseIdentifier(): Expression =
+      Identifier(curToken, curToken.literal)
+
+    def parsePrefixExpression(): Option[Expression] = {
+      val current = curToken
+      nextToken()
+
+      parseExpression(Priority.PREFIX) match {
+        case Some(right) =>
+          Some(PrefixExpression(current, current.literal, right))
+        case None => None
+      }
+    }
+
+    curToken.tokenType match {
+      case IDENT        => Some(parseIdentifier())
+      case INT          => Some(parseIntegerLiteral())
+      case BANG | MINUS => parsePrefixExpression()
+      case _ =>
+        _errors.addOne(
+          s"no prefix parse function for ${curToken.tokenType.token} found"
+        )
+        None
+    }
   }
 
   private def curTokenIs(tokenType: TokenType): Boolean =

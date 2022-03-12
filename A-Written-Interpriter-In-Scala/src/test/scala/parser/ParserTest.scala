@@ -5,6 +5,7 @@ import ast.{
   Identifier,
   IntegerLiteral,
   LetStatement,
+  PrefixExpression,
   Program,
   ReturnStatement
 }
@@ -80,9 +81,9 @@ class ParserTest extends FunSpec {
       program.statements.foreach {
         case statement: Some[ExpressionStatement] =>
           statement.get.tokenLiteral() mustEqual "foobar"
-          val ident = statement.get.expression.get.asInstanceOf[Identifier]
-          ident.value mustEqual "foobar"
-          ident.tokenLiteral() mustEqual "foobar"
+          val expression = statement.get.expression.get.asInstanceOf[Identifier]
+          expression.value mustEqual "foobar"
+          expression.tokenLiteral() mustEqual "foobar"
         case _ =>
           fail("invalid statement")
       }
@@ -101,11 +102,37 @@ class ParserTest extends FunSpec {
       program.statements.length mustEqual 1
       program.statements.foreach {
         case statement: Some[ExpressionStatement] =>
-          val ident = statement.get.expression.get.asInstanceOf[IntegerLiteral]
-          ident.value mustEqual 5
-          ident.tokenLiteral() mustEqual "5"
+          val expression =
+            statement.get.expression.get.asInstanceOf[IntegerLiteral]
+          expression.value mustEqual 5
+          expression.tokenLiteral() mustEqual "5"
         case _ =>
           fail("invalid statement")
+      }
+    }
+
+    it("prefix expression") {
+      // input, operator, integerValue
+      val list = Seq(("!5", "!", 5), ("!5", "!", 5))
+      list.foreach { case (input, operator, integerValue) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.length mustEqual 1
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[PrefixExpression]
+            expression.operator mustEqual operator
+
+            val integerLiteral = expression.right.asInstanceOf[IntegerLiteral]
+            integerLiteral.value mustEqual integerValue
+            integerLiteral.tokenLiteral() mustEqual integerValue.toString
+          case _ =>
+            fail("invalid statement")
+        }
       }
     }
   }
