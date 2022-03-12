@@ -4,6 +4,7 @@ import ast.{
   BooleanExpression,
   ExpressionStatement,
   Identifier,
+  IfExpression,
   InfixExpression,
   IntegerLiteral,
   LetStatement,
@@ -196,6 +197,33 @@ class ParserTest extends FunSpec {
       }
     }
 
+    it("if expression") {
+      val list = Seq(
+        ("if (x < y) { x }", "(x < y)", "x", None),
+        ("if (x < y) { x } else { y }", "(x < y)", "x", Some("y"))
+      )
+      list.foreach { case (input, condition, consequence, alternative) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[IfExpression]
+
+            expression.condition.getString mustEqual condition
+            expression.consequence.statements.length mustEqual 1
+            expression.consequence.statements.head.get.getString mustEqual consequence
+            expression.alternative.map(_.getString) mustEqual alternative
+
+          case _ =>
+            fail("invalid statement")
+        }
+      }
+    }
+
     it("operator precedence") {
       val list = Seq(
         ("-a * b", "((-a) * b)"),
@@ -254,7 +282,7 @@ class ParserTest extends FunSpec {
   def checkParserErrors(parser: Parser): Unit = {
     if (parser.errors.nonEmpty) {
       parser.errors.foreach(println)
-      fail(s"parser has ${parser.errors.length}")
+      fail(s"parser has ${parser.errors.length} errors")
     }
   }
 }

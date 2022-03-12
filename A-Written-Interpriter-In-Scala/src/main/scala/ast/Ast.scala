@@ -48,6 +48,12 @@ case class ExpressionStatement(
   override def getString: String = expression.map(_.getString).getOrElse("")
 }
 
+case class BlockStatement(token: Token, statements: Seq[Option[Statement]])
+    extends Expression {
+  override def getString: String =
+    statements.flatMap(_.map(_.getString)).mkString("\n")
+}
+
 case class Identifier(token: Token, value: String) extends Expression {
   override def getString: String = value
 }
@@ -72,4 +78,18 @@ case class InfixExpression(
 
 case class BooleanExpression(token: Token, value: Boolean) extends Expression {
   override def getString: String = token.literal
+}
+
+case class IfExpression(
+    token: Token,
+    condition: Expression,
+    consequence: BlockStatement,
+    alternative: Option[BlockStatement]
+) extends Expression {
+  override def getString: String =
+    s"""
+       |if ${condition.getString} ${consequence.getString} ${alternative
+      .map("else " + _.getString)
+      .getOrElse("")}
+       |""".stripMargin
 }

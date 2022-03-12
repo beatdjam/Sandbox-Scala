@@ -1,10 +1,12 @@
 package parser
 
 import ast.{
+  BlockStatement,
   BooleanExpression,
   Expression,
   ExpressionStatement,
   Identifier,
+  IfExpression,
   InfixExpression,
   IntegerLiteral,
   LetStatement,
@@ -18,19 +20,24 @@ import token.{
   ASSIGN,
   ASTERISK,
   BANG,
+  ELSE,
   EOF,
   EQ,
   FALSE,
   GT,
   IDENT,
+  IF,
   INT,
+  LBRACE,
   LET,
   LPAREN,
   LT,
   MINUS,
   NOT_EQ,
   PLUS,
+  RBRACE,
   RETURN,
+  RPAREN,
   SEMICOLON,
   SLASH,
   TRUE,
@@ -106,6 +113,17 @@ case class Parser private (
     Some(ExpressionStatement(current, expression))
   }
 
+  private def parseBlockStatement(): BlockStatement = {
+    val current = curToken
+    val buf = ListBuffer.empty[Option[Statement]]
+    nextToken()
+    while (!curTokenIs(RBRACE) && !curTokenIs(EOF)) {
+      buf.addOne(parseStatement())
+      nextToken()
+    }
+    BlockStatement(current, buf.toList)
+  }
+
   private def parseExpression(precedence: Int): Option[Expression] = {
     val precedences: Map[TokenType, Int] = Map(
       EQ -> Priority.EQUALS,
@@ -161,6 +179,26 @@ case class Parser private (
       }
     }
 
+    def parseIfExpression(): Option[Expression] = {
+      if (!expectPeek(LPAREN)) None
+      else {
+        val current = curToken
+        nextToken()
+        val conditionOpt = parseExpression(Priority.LOWEST)
+        conditionOpt match {
+          case None | Some(_) if !expectPeek(RPAREN) || !expectPeek(LBRACE) =>
+            None
+          case Some(condition) =>
+            val conSeq = parseBlockStatement()
+            val alt = if (peekTokenIs(ELSE)) {
+              nextToken()
+              if (expectPeek(LBRACE)) Some(parseBlockStatement()) else None
+            } else None
+            Some(IfExpression(current, condition, conSeq, alt))
+        }
+      }
+    }
+
     // NOTE: 先読みしたtokenがinfixのとき、セミコロンか現在の優先度以下の演算子がくるまでループする
     def getExpression(leftExp: Option[Expression]): Option[Expression] = {
       leftExp.flatMap { left =>
@@ -178,6 +216,7 @@ case class Parser private (
       case LPAREN       => parseGroupedExpression()
       case TRUE | FALSE => Some(parseBooleanExpression())
       case BANG | MINUS => parsePrefixExpression()
+      case IF           => parseIfExpression()
       case _ =>
         _errors.addOne(
           s"no prefix parse function for ${curToken.tokenType.token} found"
