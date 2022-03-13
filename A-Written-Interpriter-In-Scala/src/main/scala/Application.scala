@@ -1,8 +1,7 @@
 import lexer.Lexer
-import token.EOF
+import parser.Parser
 
 import scala.io.StdIn.readLine
-import scala.util.control.Breaks.{break, breakable}
 
 object Application {
   def main(args: Array[String]): Unit = {
@@ -12,13 +11,29 @@ object Application {
       if (input == "") return
 
       val lexer = Lexer.from(input)
-      breakable {
-        while (true) {
-          val tok = lexer.nextToken()
-          if (tok.tokenType == EOF) break
-          println(tok)
-        }
-      }
+      val parser = Parser.from(lexer)
+      val program = parser.parseProgram()
+      if (parser.errors.nonEmpty) printParserErrors(parser.errors)
+      else println(program.getString)
     }
+  }
+
+  private def printParserErrors(errors: Seq[String]): Unit = {
+    val monkeyFace = """            __,__
+                       |   .--.  .-"     "-.  .--.
+                       |  / .. \/  .-. .-.  \/ .. \
+                       | | |  '|  /   Y   \  |'  | |
+                       | | \   \  \ 0 | 0 /  /   / |
+                       |  \ '- ,\.-'''''''-./, -' /
+                       |   ''-' /_   ^ ^   _\ '-''
+                       |       |  \._   _./  |
+                       |       \   \ '~' /   /
+                       |        '._ '-=-' _.'
+                       |           '-----'""".stripMargin
+
+    println(monkeyFace)
+    println("Woops! We ran into some monkey business here!")
+    println(" parser errors:")
+    errors.foreach(error => println("\t" + error))
   }
 }
