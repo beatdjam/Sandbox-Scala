@@ -79,28 +79,30 @@ case class Parser private (
 
   private def parseStatement(): Option[Statement] = {
     def parseLetStatement(): Option[LetStatement] = {
-      // letのステートメント
-      val current = curToken
-
-      // letに続くのはIdentifierのはず
+      val statement = curToken
       if (expectPeek(IDENT)) {
-        val stmt =
-          LetStatement(current, Identifier(curToken, curToken.literal), None)
-
-        // let <Identifier> = ~略~ ;
-        // になっているはず
+        val identifier = curToken
         if (expectPeek(ASSIGN)) {
-          // セミコロンまでスキップ
-          while (!curTokenIs(SEMICOLON)) nextToken()
-          Some(stmt)
+          nextToken()
+          val value = parseExpression(Priority.LOWEST)
+          if (peekTokenIs(SEMICOLON)) nextToken()
+          Some(
+            LetStatement(
+              statement,
+              Identifier(identifier, identifier.literal),
+              value
+            )
+          )
         } else None
       } else None
     }
 
     def parseReturnStatement(): Option[ReturnStatement] = {
       val current = curToken
-      while (!curTokenIs(SEMICOLON)) nextToken()
-      Some(ReturnStatement(current, None))
+      nextToken()
+      val returnValue = parseExpression(Priority.LOWEST)
+      if (peekTokenIs(SEMICOLON)) nextToken()
+      Some(ReturnStatement(current, returnValue))
     }
 
     def parseExpressionStatement(): Option[ExpressionStatement] = {

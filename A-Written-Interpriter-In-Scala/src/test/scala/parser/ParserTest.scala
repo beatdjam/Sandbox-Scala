@@ -23,49 +23,51 @@ class ParserTest extends FunSpec {
 
   describe("statements") {
     it("let statements") {
-      val input =
-        """
-          |let x = 5;
-          |let y = 10;
-          |let foobar = 838383;
-          |""".stripMargin
 
-      val lexer = Lexer.from(input)
-      val parser = Parser.from(lexer)
-      val program = parser.parseProgram()
-      checkParserErrors(parser)
-      val expected = Seq("x", "y", "foobar")
+      val list = Seq(
+        ("let x = 5;", "x", "5"),
+        ("let y = true;", "y", "true"),
+        ("let foobar = y;", "foobar", "y")
+      )
 
-      program.statements.length mustEqual 3
-      program.statements.zipWithIndex.foreach {
-        case (statement: Some[LetStatement], index: Int) =>
-          statement.get.tokenLiteral() mustEqual "let"
-          statement.get.name.value mustEqual expected(index)
-          statement.get.name.tokenLiteral() mustEqual expected(index)
-        case _ =>
-          fail("invalid statement")
+      list.foreach { case (input, identifier, value) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.length mustEqual 1
+        program.statements.foreach {
+          case statement: Some[LetStatement] =>
+            statement.get.tokenLiteral() mustEqual "let"
+            statement.get.name.value mustEqual identifier
+            statement.get.value.get.tokenLiteral() mustEqual value
+          case _ =>
+            fail("invalid statement")
+        }
       }
     }
 
     it("return statements") {
-      val input =
-        """
-          |return 5;
-          |return 10;
-          |return 838383;
-          |""".stripMargin
+      val list = Seq(
+        ("return 5;", "return"),
+        ("return 10;", "return"),
+        ("return 838383;", "return")
+      )
 
-      val lexer = Lexer.from(input)
-      val parser = Parser.from(lexer)
-      val program = parser.parseProgram()
-      checkParserErrors(parser)
+      list.foreach { case (input, expect) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
 
-      program.statements.length mustEqual 3
-      program.statements.foreach {
-        case statement: Some[ReturnStatement] =>
-          statement.get.tokenLiteral() mustEqual "return"
-        case _ =>
-          fail("invalid statement")
+        program.statements.length mustEqual 1
+        program.statements.foreach {
+          case statement: Some[ReturnStatement] =>
+            statement.get.tokenLiteral() mustEqual expect
+          case _ =>
+            fail("invalid statement")
+        }
       }
     }
   }
@@ -93,6 +95,7 @@ class ParserTest extends FunSpec {
           fail("invalid statement")
       }
     }
+
     it("digit expression") {
       val input =
         """
@@ -140,6 +143,7 @@ class ParserTest extends FunSpec {
         }
       }
     }
+
     it("infix expression") {
       // input, operator, integerValue
       val list = Seq(
