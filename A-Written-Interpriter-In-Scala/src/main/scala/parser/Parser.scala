@@ -3,6 +3,7 @@ package parser
 import ast.{
   BlockStatement,
   BooleanExpression,
+  CallExpression,
   Expression,
   ExpressionStatement,
   FunctionLiteral,
@@ -76,55 +77,46 @@ case class Parser private (
     Program(buf.toList)
   }
 
-  private def parseStatement(): Option[Statement] = curToken.tokenType match {
-    case LET    => parseLetStatement()
-    case RETURN => parseReturnStatement()
-    case _      => parseExpressionStatement()
-  }
+  private def parseStatement(): Option[Statement] = {
+    def parseLetStatement(): Option[LetStatement] = {
+      // letのステートメント
+      val current = curToken
 
-  private def parseLetStatement(): Option[LetStatement] = {
-    // letのステートメント
-    val current = curToken
+      // letに続くのはIdentifierのはず
+      if (expectPeek(IDENT)) {
+        val stmt =
+          LetStatement(current, Identifier(curToken, curToken.literal), None)
 
-    // letに続くのはIdentifierのはず
-    if (expectPeek(IDENT)) {
-      val stmt =
-        LetStatement(current, Identifier(curToken, curToken.literal), None)
-
-      // let <Identifier> = ~略~ ;
-      // になっているはず
-      if (expectPeek(ASSIGN)) {
-        // セミコロンまでスキップ
-        while (!curTokenIs(SEMICOLON)) nextToken()
-        Some(stmt)
+        // let <Identifier> = ~略~ ;
+        // になっているはず
+        if (expectPeek(ASSIGN)) {
+          // セミコロンまでスキップ
+          while (!curTokenIs(SEMICOLON)) nextToken()
+          Some(stmt)
+        } else None
       } else None
-    } else None
-  }
-
-  private def parseReturnStatement(): Option[ReturnStatement] = {
-    val current = curToken
-    while (!curTokenIs(SEMICOLON)) nextToken()
-    Some(ReturnStatement(current, None))
-  }
-
-  private def parseExpressionStatement(): Option[ExpressionStatement] = {
-    val current = curToken
-    val expression = parseExpression(Priority.LOWEST)
-
-    if (peekTokenIs(token.SEMICOLON)) nextToken()
-
-    Some(ExpressionStatement(current, expression))
-  }
-
-  private def parseBlockStatement(): BlockStatement = {
-    val current = curToken
-    val buf = ListBuffer.empty[Option[Statement]]
-    nextToken()
-    while (!curTokenIs(RBRACE) && !curTokenIs(EOF)) {
-      buf.addOne(parseStatement())
-      nextToken()
     }
-    BlockStatement(current, buf.toList)
+
+    def parseReturnStatement(): Option[ReturnStatement] = {
+      val current = curToken
+      while (!curTokenIs(SEMICOLON)) nextToken()
+      Some(ReturnStatement(current, None))
+    }
+
+    def parseExpressionStatement(): Option[ExpressionStatement] = {
+      val current = curToken
+      val expression = parseExpression(Priority.LOWEST)
+
+      if (peekTokenIs(token.SEMICOLON)) nextToken()
+
+      Some(ExpressionStatement(current, expression))
+    }
+
+    curToken.tokenType match {
+      case LET    => parseLetStatement()
+      case RETURN => parseReturnStatement()
+      case _      => parseExpressionStatement()
+    }
   }
 
   private def parseExpression(precedence: Int): Option[Expression] = {
@@ -136,8 +128,10 @@ case class Parser private (
       PLUS -> Priority.SUM,
       MINUS -> Priority.SUM,
       SLASH -> Priority.PRODUCT,
-      ASTERISK -> Priority.PRODUCT
+      ASTERISK -> Priority.PRODUCT,
+      LPAREN -> Priority.CALL
     )
+
     def peekPrecedence(): Int =
       precedences.getOrElse(peekToken.tokenType, Priority.LOWEST)
 
@@ -146,6 +140,17 @@ case class Parser private (
 
     def parseIntegerLiteral(): Expression =
       IntegerLiteral(curToken, curToken.literal.toInt)
+
+    def parseBlockStatement(): BlockStatement = {
+      val current = curToken
+      val buf = ListBuffer.empty[Option[Statement]]
+      nextToken()
+      while (!curTokenIs(RBRACE) && !curTokenIs(EOF)) {
+        buf.addOne(parseStatement())
+        nextToken()
+      }
+      BlockStatement(current, buf.toList)
+    }
 
     def parseFunctionLiteral(): Option[Expression] = {
       val current = curToken
@@ -188,11 +193,15 @@ case class Parser private (
     def parseInfixExpression(left: Expression): Option[Expression] = {
       val current = curToken
       val precedence = curPrecedence()
-      nextToken()
-      parseExpression(precedence) match {
-        case Some(right) =>
-          Some(InfixExpression(current, left, current.literal, right))
-        case None => None
+      if (curToken.tokenType == LPAREN) {
+        Some(parseCallExpression(left))
+      } else {
+        nextToken()
+        parseExpression(precedence) match {
+          case Some(right) =>
+            Some(InfixExpression(current, left, current.literal, right))
+          case None => None
+        }
       }
     }
 
@@ -235,13 +244,39 @@ case class Parser private (
     }
 
     // NOTE: 先読みしたtokenがinfixのとき、セミコロンか現在の優先度以下の演算子がくるまでループする
-    def getExpression(leftExp: Option[Expression]): Option[Expression] = {
+    def getInfixExpression(leftExp: Option[Expression]): Option[Expression] = {
       leftExp.flatMap { left =>
         if (!peekTokenIs(token.SEMICOLON) && precedence < peekPrecedence) {
           nextToken()
           val newLeft = parseInfixExpression(left)
-          getExpression(newLeft)
+          getInfixExpression(newLeft)
         } else Some(left)
+      }
+    }
+
+    def parseCallExpression(leftExp: Expression): Expression = {
+      val current = curToken
+      val arguments = parseCallArguments()
+      CallExpression(current, leftExp, arguments)
+    }
+
+    def parseCallArguments(): Seq[Expression] = {
+      if (peekTokenIs(RPAREN)) {
+        nextToken()
+        Nil
+      } else {
+        nextToken()
+        val buf = ListBuffer.empty[Expression]
+        parseExpression(Priority.LOWEST).map(buf.addOne)
+
+        while (peekTokenIs(COMMA)) {
+          nextToken()
+          nextToken()
+          parseExpression(Priority.LOWEST).map(buf.addOne)
+        }
+
+        if (expectPeek(RPAREN)) buf.toList
+        else Nil
       }
     }
 
@@ -260,8 +295,8 @@ case class Parser private (
         None
     }
     peekToken.tokenType match {
-      case PLUS | MINUS | SLASH | ASTERISK | EQ | NOT_EQ | LT | GT =>
-        getExpression(leftExp)
+      case LPAREN | PLUS | MINUS | SLASH | ASTERISK | EQ | NOT_EQ | LT | GT =>
+        getInfixExpression(leftExp)
       case _ => leftExp
     }
   }

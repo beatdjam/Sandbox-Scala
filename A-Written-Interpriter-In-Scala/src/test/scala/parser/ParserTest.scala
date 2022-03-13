@@ -2,6 +2,7 @@ package parser
 
 import ast.{
   BooleanExpression,
+  CallExpression,
   ExpressionStatement,
   FunctionLiteral,
   Identifier,
@@ -253,6 +254,30 @@ class ParserTest extends FunSpec {
       }
     }
 
+    it("call expression") {
+      val list = Seq(
+        ("add(1, 2 * 3, 4 + 5)", "add", Seq("1", "(2 * 3)", "(4 + 5)"))
+      )
+      list.foreach { case (input, name, parameters) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.length mustBe 1
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[CallExpression]
+            expression.function.tokenLiteral() mustEqual name
+            expression.arguments
+              .map(_.getString) mustEqual parameters
+          case _ =>
+            fail("invalid statement")
+        }
+      }
+    }
+
     it("operator precedence") {
       val list = Seq(
         ("-a * b", "((-a) * b)"),
@@ -278,7 +303,13 @@ class ParserTest extends FunSpec {
         ("(5 + 5) * 2", "((5 + 5) * 2)"),
         ("2 / (5 + 5)", "(2 / (5 + 5))"),
         ("-(5 + 5)", "(-(5 + 5))"),
-        ("(!(true == true))", "(!(true == true))")
+        ("(!(true == true))", "(!(true == true))"),
+        ("a + add(b * c) + d", "((a + add((b * c))) + d)"),
+        (
+          "add(a, b, 1, 2 * 3, 4 + 5, add(6, (7 * 8)))",
+          "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"
+        ),
+        ("add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))")
       )
       list.foreach { case (input, expected) =>
         val lexer = Lexer.from(input)

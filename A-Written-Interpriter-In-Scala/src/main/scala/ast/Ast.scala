@@ -102,3 +102,12 @@ case class FunctionLiteral(
   override def getString: String =
     s"${tokenLiteral()}(${parameters.mkString(", ")}) ${body.getString}"
 }
+
+case class CallExpression(
+    token: Token,
+    function: Expression,
+    arguments: Seq[Expression]
+) extends Expression {
+  override def getString: String =
+    s"${function.getString}(${arguments.map(_.getString).mkString(", ")})"
+}
