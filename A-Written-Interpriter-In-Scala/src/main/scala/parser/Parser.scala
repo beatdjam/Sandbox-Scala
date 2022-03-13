@@ -56,14 +56,14 @@ object Priority extends Enumeration {
 }
 
 case class Parser private (
-    lexer: Lexer,
-    var curToken: Token,
-    var peekToken: Token
+    private val lexer: Lexer,
+    private var curToken: Token,
+    private var peekToken: Token
 ) {
   private val _errors = ListBuffer.empty[String]
   def errors: Seq[String] = _errors.toList
 
-  def nextToken(): Unit = {
+  private def nextToken(): Unit = {
     curToken = peekToken
     peekToken = lexer.nextToken()
   }
