@@ -81,18 +81,12 @@ case class Parser private (
     def parseLetStatement(): Option[LetStatement] = {
       val statement = curToken
       if (expectPeek(IDENT)) {
-        val identifier = curToken
+        val identifier = Identifier(curToken, curToken.literal)
         if (expectPeek(ASSIGN)) {
           nextToken()
           val value = parseExpression(Priority.LOWEST)
           if (peekTokenIs(SEMICOLON)) nextToken()
-          Some(
-            LetStatement(
-              statement,
-              Identifier(identifier, identifier.literal),
-              value
-            )
-          )
+          Some(LetStatement(statement, identifier, value))
         } else None
       } else None
     }
@@ -108,9 +102,7 @@ case class Parser private (
     def parseExpressionStatement(): Option[ExpressionStatement] = {
       val current = curToken
       val expression = parseExpression(Priority.LOWEST)
-
       if (peekTokenIs(token.SEMICOLON)) nextToken()
-
       Some(ExpressionStatement(current, expression))
     }
 
@@ -195,9 +187,8 @@ case class Parser private (
     def parseInfixExpression(left: Expression): Option[Expression] = {
       val current = curToken
       val precedence = curPrecedence()
-      if (curToken.tokenType == LPAREN) {
-        Some(parseCallExpression(left))
-      } else {
+      if (curToken.tokenType == LPAREN) Some(parseCallExpression(left))
+      else {
         nextToken()
         parseExpression(precedence) match {
           case Some(right) =>
