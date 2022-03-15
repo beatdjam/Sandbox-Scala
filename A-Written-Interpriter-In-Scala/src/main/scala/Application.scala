@@ -1,3 +1,4 @@
+import evaluator.Evaluator
 import lexer.Lexer
 import parser.Parser
 
@@ -14,7 +15,13 @@ object Application {
       val parser = Parser.from(lexer)
       val program = parser.parseProgram()
       if (parser.errors.nonEmpty) printParserErrors(parser.errors)
-      else println(program.getString)
+      else {
+        val evaluated = Evaluator.eval(program)
+        evaluated match {
+          case Some(value) => println(value.inspect)
+          case None        => ()
+        }
+      }
     }
   }
 

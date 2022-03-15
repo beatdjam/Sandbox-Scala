@@ -1,8 +1,8 @@
 package evaluator
 
-import `object`.{Integer, Object}
+import `object`.{Bool, Integer, Null, Object}
 import ast.{
-  Expression,
+  BooleanExpression,
   ExpressionStatement,
   IntegerLiteral,
   Node,
@@ -10,7 +10,14 @@ import ast.{
   Statement
 }
 
+import scala.annotation.tailrec
+
 object Evaluator {
+  private val TRUE = Bool(true)
+  private val FALSE = Bool(false)
+  private val NULL = Null
+
+  @tailrec
   def eval(node: Node): Option[Object] = {
     node match {
       case Program(statements) => evalStatements(statements)
@@ -18,6 +25,8 @@ object Evaluator {
         eval(expression)
       case IntegerLiteral(_, value) =>
         Some(Integer(value))
+      case BooleanExpression(_, value) =>
+        Some(nativeBoolToBool(value))
       case _ => None
     }
   }
@@ -30,4 +39,7 @@ object Evaluator {
     }
     result.headOption
   }
+
+  private def nativeBoolToBool(input: Boolean): Bool =
+    if (input) TRUE else FALSE
 }
