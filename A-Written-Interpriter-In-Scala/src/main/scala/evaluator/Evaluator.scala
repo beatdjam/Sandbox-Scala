@@ -5,14 +5,13 @@ import ast.{
   BooleanExpression,
   Expression,
   ExpressionStatement,
+  InfixExpression,
   IntegerLiteral,
   Node,
   PrefixExpression,
   Program,
   Statement
 }
-
-import scala.annotation.tailrec
 
 object Evaluator {
   private val TRUE = Bool(true)
@@ -30,6 +29,8 @@ object Evaluator {
         Some(nativeBoolToBool(value))
       case PrefixExpression(_, operator, right) =>
         evalPrefixExpression(operator, eval(right))
+      case InfixExpression(_, left, operator, right) =>
+        evalInfixExpression(operator, eval(left), eval(right))
       case _ => None
     }
   }
@@ -37,9 +38,7 @@ object Evaluator {
   private def evalStatements(
       statements: Seq[Option[Statement]]
   ): Option[Object] = {
-    val result = statements.flatMap { statementOpt =>
-      statementOpt.flatMap(eval(_))
-    }
+    val result = statements.flatMap { _.flatMap(eval(_)) }
     result.headOption
   }
 
@@ -50,11 +49,9 @@ object Evaluator {
       operator: String,
       right: Option[Object]
   ): Option[Object] = {
-    def evalMinusPrefixOperatorExpression(right: Option[Object]) = {
-      right match {
-        case Some(Integer(value)) => Some(Integer(-value))
-        case _                    => None
-      }
+    def evalMinusPrefixOperatorExpression(right: Option[Object]) = right match {
+      case Some(Integer(value)) => Some(Integer(-value))
+      case _                    => None
     }
 
     def evalBangOperatorExpression(right: Option[Object]) = right match {
@@ -65,10 +62,38 @@ object Evaluator {
     }
 
     operator match {
-      case "!" =>
-        evalBangOperatorExpression(right)
-      case "-" =>
-        evalMinusPrefixOperatorExpression(right)
+      case "!" => evalBangOperatorExpression(right)
+      case "-" => evalMinusPrefixOperatorExpression(right)
+      case _   => None
+    }
+  }
+  private def evalInfixExpression(
+      operator: String,
+      left: Option[Object],
+      right: Option[Object]
+  ): Option[Object] = {
+    def evalIntegerInfixExpression(
+        operator: String,
+        left: Int,
+        right: Int
+    ): Option[Object] = operator match {
+      case "+" => Some(Integer(left + right))
+      case "-" => Some(Integer(left - right))
+      case "*" => Some(Integer(left * right))
+      case "/" => Some(Integer(left / right))
+      case "<" => Some(Bool(left < right))
+      case ">" => Some(Bool(left > right))
+      case _   => None
+    }
+
+    (operator, left, right) match {
+      case ("==", _, _) =>
+        Some(nativeBoolToBool(left == right))
+      case ("!=", _, _) =>
+        Some(nativeBoolToBool(left != right))
+      case (_, Some(Integer(leftValue)), Some(Integer(rightValue))) =>
+        evalIntegerInfixExpression(operator, leftValue, rightValue)
+      case _ => None
     }
   }
 }
