@@ -49,18 +49,26 @@ object Evaluator {
   private def evalPrefixExpression(
       operator: String,
       right: Option[Object]
-  ): Option[Object] = operator match {
-    case "!" =>
-      right match {
-        case Some(TRUE)  => Some(FALSE)
-        case Some(FALSE) => Some(TRUE)
-        case Some(NULL)  => Some(TRUE)
-        case _           => Some(FALSE)
-      }
-    case "-" =>
+  ): Option[Object] = {
+    def evalMinusPrefixOperatorExpression(right: Option[Object]) = {
       right match {
         case Some(Integer(value)) => Some(Integer(-value))
         case _                    => None
       }
+    }
+
+    def evalBangOperatorExpression(right: Option[Object]) = right match {
+      case Some(TRUE)  => Some(FALSE)
+      case Some(FALSE) => Some(TRUE)
+      case Some(NULL)  => Some(TRUE)
+      case _           => Some(FALSE)
+    }
+
+    operator match {
+      case "!" =>
+        evalBangOperatorExpression(right)
+      case "-" =>
+        evalMinusPrefixOperatorExpression(right)
+    }
   }
 }
