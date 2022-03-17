@@ -13,7 +13,15 @@ class EvaluatorTest extends FunSpec {
         ("5", 5),
         ("10", 10),
         ("true", true),
-        ("false", false)
+        ("false", false),
+        ("!true", false),
+        ("!false", true),
+        ("!5", false),
+        ("!!true", true),
+        ("!!false", false),
+        ("!!5", true),
+        ("-5", -5),
+        ("-10", -10)
       )
 
       list.foreach { case (input, expected) =>
