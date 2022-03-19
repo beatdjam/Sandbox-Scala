@@ -89,6 +89,40 @@ class EvaluatorTest extends FunSpec {
         }
       }
     }
+    it("error handling") {
+      val list = Seq(
+        ("5 + true", "type mismatch: INTEGER + BOOLEAN"),
+        ("5 + true; 5;", "type mismatch: INTEGER + BOOLEAN"),
+        ("-true", "unknown operator: -BOOLEAN"),
+        ("true + false;", "unknown operator: BOOLEAN + BOOLEAN"),
+        ("5; true + false; 5", "unknown operator: BOOLEAN + BOOLEAN"),
+        (
+          "if (10 > 1) { true + false; }",
+          "unknown operator: BOOLEAN + BOOLEAN"
+        ),
+        (
+          """
+            | if (10 > 1) {
+            |   if (10 > 1) {
+            |     return true + false;
+            |   }
+            |   return 1; 
+            |}
+            |""".stripMargin,
+          "unknown operator: BOOLEAN + BOOLEAN"
+        )
+      )
+
+      list.foreach { case (input, expected) =>
+        val evaluated = testEval(input)
+        evaluated match {
+          case Some(Error(message)) =>
+            message mustEqual expected
+          case _ =>
+            fail(s"invalid object. $input $evaluated")
+        }
+      }
+    }
   }
 
   private def testEval(input: String) = {

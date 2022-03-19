@@ -1,6 +1,6 @@
 package evaluator
 
-import `object`.{Bool, Integer, Null, Object, Return}
+import `object`.{Bool, Error, Integer, Null, Object, Return}
 import ast.{
   BlockStatement,
   BooleanExpression,
@@ -53,6 +53,7 @@ object Evaluator {
     statements
       .flatMap { _.flatMap(eval) }
       .sortBy {
+        case Error(_)  => -1
         case Return(_) => 0
         case _         => 1
       }
@@ -87,7 +88,10 @@ object Evaluator {
   ): Option[Object] = {
     def evalMinusPrefixOperatorExpression(right: Option[Object]) = right match {
       case Some(Integer(value)) => Some(Integer(-value))
-      case _                    => None
+      case _ =>
+        Some(
+          Error(s"unknown operator: -${right.map(_.objectType).getOrElse("")}")
+        )
     }
 
     def evalBangOperatorExpression(right: Option[Object]) = right match {
@@ -100,7 +104,8 @@ object Evaluator {
     operator match {
       case "!" => evalBangOperatorExpression(right)
       case "-" => evalMinusPrefixOperatorExpression(right)
-      case _   => None
+      case _ =>
+        Some(Error(s"unknown operator: $operator${right.map(_.objectType)}"))
     }
   }
 
@@ -111,16 +116,23 @@ object Evaluator {
   ): Option[Object] = {
     def evalIntegerInfixExpression(
         operator: String,
-        left: Int,
-        right: Int
+        leftValue: Int,
+        rightValue: Int
     ): Option[Object] = operator match {
-      case "+" => Some(Integer(left + right))
-      case "-" => Some(Integer(left - right))
-      case "*" => Some(Integer(left * right))
-      case "/" => Some(Integer(left / right))
-      case "<" => Some(Bool(left < right))
-      case ">" => Some(Bool(left > right))
-      case _   => None
+      case "+" => Some(Integer(leftValue + rightValue))
+      case "-" => Some(Integer(leftValue - rightValue))
+      case "*" => Some(Integer(leftValue * rightValue))
+      case "/" => Some(Integer(leftValue / rightValue))
+      case "<" => Some(Bool(leftValue < rightValue))
+      case ">" => Some(Bool(leftValue > rightValue))
+      case _ =>
+        Some(
+          Error(
+            s"unknown operator: ${left
+              .map(_.objectType)
+              .getOrElse("")} $operator ${right.map(_.objectType).getOrElse("")}"
+          )
+        )
     }
 
     (operator, left, right) match {
@@ -130,7 +142,28 @@ object Evaluator {
         Some(nativeBoolToBool(left != right))
       case (_, Some(Integer(leftValue)), Some(Integer(rightValue))) =>
         evalIntegerInfixExpression(operator, leftValue, rightValue)
-      case _ => None
+      case (_, Some(leftValue), Some(rightValue)) =>
+        if (leftValue.objectType != rightValue.objectType) {
+          Some(
+            Error(
+              s"type mismatch: ${leftValue.objectType} $operator ${rightValue.objectType}"
+            )
+          )
+        } else {
+          Some(
+            Error(
+              s"unknown operator: ${leftValue.objectType} $operator ${rightValue.objectType}"
+            )
+          )
+        }
+      case _ =>
+        Some(
+          Error(
+            s"unknown operator: ${left
+              .map(_.objectType)
+              .getOrElse("")} $operator ${right.map(_.objectType).getOrElse("")}"
+          )
+        )
     }
   }
 
