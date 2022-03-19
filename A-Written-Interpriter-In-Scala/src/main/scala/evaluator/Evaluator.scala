@@ -1,10 +1,9 @@
 package evaluator
 
-import `object`.{Bool, Integer, Null, Object}
+import `object`.{Bool, Integer, Null, Object, Return}
 import ast.{
   BlockStatement,
   BooleanExpression,
-  Expression,
   ExpressionStatement,
   IfExpression,
   InfixExpression,
@@ -12,6 +11,7 @@ import ast.{
   Node,
   PrefixExpression,
   Program,
+  ReturnStatement,
   Statement
 }
 
@@ -22,7 +22,7 @@ object Evaluator {
 
   def eval(node: Node): Option[Object] = {
     node match {
-      case Program(statements) => evalStatements(statements)
+      case Program(statements) => evalProgram(statements)
       case ExpressionStatement(_, Some(expression)) =>
         eval(expression)
       case IntegerLiteral(_, value) =>
@@ -34,13 +34,15 @@ object Evaluator {
       case InfixExpression(_, left, operator, right) =>
         evalInfixExpression(operator, eval(left), eval(right))
       case BlockStatement(_, statements) =>
-        evalStatements(statements)
+        evalBlockStatements(statements)
       case IfExpression(_, condition, consequence, alternative) =>
         eval(condition).flatMap { condition =>
           if (isTruthy(condition)) eval(consequence)
           else if (alternative.isDefined) alternative.flatMap(eval(_))
           else Some(NULL)
         }
+      case ReturnStatement(_, Some(returnValue)) =>
+        eval(returnValue).map(Return)
       case _ => None
     }
   }
@@ -48,8 +50,32 @@ object Evaluator {
   private def evalStatements(
       statements: Seq[Option[Statement]]
   ): Option[Object] = {
-    val result = statements.flatMap { _.flatMap(eval(_)) }
-    result.headOption
+    statements
+      .flatMap { _.flatMap(eval) }
+      .sortBy {
+        case Return(_) => 0
+        case _         => 1
+      }
+      .headOption
+  }
+
+  private def evalProgram(
+      statements: Seq[Option[Statement]]
+  ): Option[Object] = {
+    evalStatements(statements) match {
+      case Some(Return(value)) => Some(value)
+      case result @ Some(_)    => result
+      case None                => None
+    }
+  }
+
+  private def evalBlockStatements(
+      statements: Seq[Option[Statement]]
+  ): Option[Object] = {
+    evalStatements(statements) match {
+      case result @ Some(_) => result
+      case None             => None
+    }
   }
 
   private def nativeBoolToBool(input: Boolean): Bool =
@@ -77,6 +103,7 @@ object Evaluator {
       case _   => None
     }
   }
+
   private def evalInfixExpression(
       operator: String,
       left: Option[Object],
