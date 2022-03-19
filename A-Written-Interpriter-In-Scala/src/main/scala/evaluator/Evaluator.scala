@@ -2,9 +2,11 @@ package evaluator
 
 import `object`.{Bool, Integer, Null, Object}
 import ast.{
+  BlockStatement,
   BooleanExpression,
   Expression,
   ExpressionStatement,
+  IfExpression,
   InfixExpression,
   IntegerLiteral,
   Node,
@@ -31,6 +33,14 @@ object Evaluator {
         evalPrefixExpression(operator, eval(right))
       case InfixExpression(_, left, operator, right) =>
         evalInfixExpression(operator, eval(left), eval(right))
+      case BlockStatement(_, statements) =>
+        evalStatements(statements)
+      case IfExpression(_, condition, consequence, alternative) =>
+        eval(condition).flatMap { condition =>
+          if (isTruthy(condition)) eval(consequence)
+          else if (alternative.isDefined) alternative.flatMap(eval(_))
+          else Some(NULL)
+        }
       case _ => None
     }
   }
@@ -95,5 +105,12 @@ object Evaluator {
         evalIntegerInfixExpression(operator, leftValue, rightValue)
       case _ => None
     }
+  }
+
+  private def isTruthy(obj: Object): Boolean = obj match {
+    case NULL  => false
+    case TRUE  => true
+    case FALSE => false
+    case _     => true
   }
 }
