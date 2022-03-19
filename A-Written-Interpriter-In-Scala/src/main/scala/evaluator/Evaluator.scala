@@ -1,13 +1,15 @@
 package evaluator
 
-import `object`.{Bool, Error, Integer, Null, Object, Return}
+import `object`.{Bool, Environment, Error, Integer, Null, Object, Return}
 import ast.{
   BlockStatement,
   BooleanExpression,
   ExpressionStatement,
+  Identifier,
   IfExpression,
   InfixExpression,
   IntegerLiteral,
+  LetStatement,
   Node,
   PrefixExpression,
   Program,
@@ -20,50 +22,67 @@ object Evaluator {
   private val FALSE = Bool(false)
   private val NULL = Null()
 
-  def eval(node: Node): Option[Object] = {
+  def eval(node: Node, env: Environment): Option[Object] = {
     node match {
-      case Program(statements) => evalProgram(statements)
+      case Program(statements) => evalProgram(statements, env)
       case ExpressionStatement(_, Some(expression)) =>
-        eval(expression)
+        eval(expression, env)
+      case LetStatement(_, name, Some(expression)) =>
+        val result = eval(expression, env)
+        result match {
+          case value @ Some(Error(_)) => value
+          case Some(value) =>
+            env.set(name.value, value)
+            None
+          case None => None
+        }
+
+      case BlockStatement(_, statements) =>
+        evalBlockStatements(statements, env)
+      case ReturnStatement(_, Some(returnValue)) =>
+        eval(returnValue, env).map(Return)
+      case PrefixExpression(_, operator, right) =>
+        evalPrefixExpression(operator, eval(right, env))
+      case InfixExpression(_, left, operator, right) =>
+        evalInfixExpression(operator, eval(left, env), eval(right, env))
+      case IfExpression(_, condition, consequence, alternative) =>
+        eval(condition, env).flatMap { condition =>
+          if (isTruthy(condition)) eval(consequence, env)
+          else if (alternative.isDefined) alternative.flatMap(eval(_, env))
+          else Some(NULL)
+        }
       case IntegerLiteral(_, value) =>
         Some(Integer(value))
       case BooleanExpression(_, value) =>
         Some(nativeBoolToBool(value))
-      case PrefixExpression(_, operator, right) =>
-        evalPrefixExpression(operator, eval(right))
-      case InfixExpression(_, left, operator, right) =>
-        evalInfixExpression(operator, eval(left), eval(right))
-      case BlockStatement(_, statements) =>
-        evalBlockStatements(statements)
-      case IfExpression(_, condition, consequence, alternative) =>
-        eval(condition).flatMap { condition =>
-          if (isTruthy(condition)) eval(consequence)
-          else if (alternative.isDefined) alternative.flatMap(eval(_))
-          else Some(NULL)
+      case Identifier(_, value) =>
+        env.get(value) match {
+          case Some(value) => Some(value)
+          case None        => Some(Error(s"identifier not found: $value"))
         }
-      case ReturnStatement(_, Some(returnValue)) =>
-        eval(returnValue).map(Return)
       case _ => None
     }
   }
 
   private def evalStatements(
-      statements: Seq[Option[Statement]]
+      statements: Seq[Option[Statement]],
+      env: Environment
   ): Option[Object] = {
-    statements
-      .flatMap { _.flatMap(eval) }
-      .sortBy {
-        case Error(_)  => -1
-        case Return(_) => 0
-        case _         => 1
-      }
-      .headOption
+    val evaluated = statements.flatMap { _.flatMap(eval(_, env)) }
+    val returnValue = evaluated.collectFirst {
+      case result @ (Error(_) | Return(_)) => result
+    }
+    returnValue match {
+      case result @ Some(_) => result
+      case None             => evaluated.reverse.headOption
+    }
   }
 
   private def evalProgram(
-      statements: Seq[Option[Statement]]
+      statements: Seq[Option[Statement]],
+      env: Environment
   ): Option[Object] = {
-    evalStatements(statements) match {
+    evalStatements(statements, env) match {
       case Some(Return(value)) => Some(value)
       case result @ Some(_)    => result
       case None                => None
@@ -71,9 +90,10 @@ object Evaluator {
   }
 
   private def evalBlockStatements(
-      statements: Seq[Option[Statement]]
+      statements: Seq[Option[Statement]],
+      env: Environment
   ): Option[Object] = {
-    evalStatements(statements) match {
+    evalStatements(statements, env) match {
       case result @ Some(_) => result
       case None             => None
     }

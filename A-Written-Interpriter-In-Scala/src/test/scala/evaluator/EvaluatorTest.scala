@@ -72,7 +72,11 @@ class EvaluatorTest extends FunSpec {
             |}
             |""".stripMargin,
           10
-        )
+        ),
+        ("let a = 5; a;", 5),
+        ("let a = 5 * 5; a;", 25),
+        ("let a = 5; let b = a; b;", 5),
+        ("let a = 5; let b = a; let c = a + b + 5; c;", 15)
       )
 
       list.foreach { case (input, expected) =>
@@ -110,7 +114,8 @@ class EvaluatorTest extends FunSpec {
             |}
             |""".stripMargin,
           "unknown operator: BOOLEAN + BOOLEAN"
-        )
+        ),
+        ("foobar", "identifier not found: foobar")
       )
 
       list.foreach { case (input, expected) =>
@@ -129,6 +134,7 @@ class EvaluatorTest extends FunSpec {
     val lexer = Lexer.from(input)
     val parser = Parser.from(lexer)
     val program = parser.parseProgram()
-    Evaluator.eval(program)
+    val env = Environment.newEnvironment
+    Evaluator.eval(program, env)
   }
 }
