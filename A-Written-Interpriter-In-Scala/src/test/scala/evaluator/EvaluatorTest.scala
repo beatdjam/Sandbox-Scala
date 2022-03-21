@@ -95,7 +95,12 @@ class EvaluatorTest extends FunSpec {
           4
         ),
         ("\"Hello World!\"", "Hello World!"),
-        ("\"Hello\" + \" \" + \"World!\"", "Hello World!")
+        ("\"Hello\" + \" \" + \"World!\"", "Hello World!"),
+        ("len(\"\")", 0),
+        ("len(\"four\")", 4),
+        ("len(\"hello world\")", 11),
+        ("len(1)", "argument to len not supported, got INTEGER"),
+        ("len(\"one\",\"two\")", "wrong number of arguments. got=2, want=1")
       )
 
       list.foreach { case (input, expected) =>
@@ -110,6 +115,28 @@ class EvaluatorTest extends FunSpec {
           case Some(value) =>
             value mustEqual expected
           case None =>
+            fail(s"invalid object. $input $evaluated")
+        }
+      }
+    }
+
+    it("builtin function") {
+      val list = Seq(
+        ("len(\"\")", 0),
+        ("len(\"four\")", 4),
+        ("len(\"hello world\")", 11),
+        ("len(1)", "argument to len not supported, got INTEGER"),
+        ("len(\"one\",\"two\")", "wrong number of arguments. got=2, want=1")
+      )
+
+      list.foreach { case (input, expected) =>
+        val evaluated = testEval(input)
+        evaluated match {
+          case Some(Integer(value)) =>
+            value mustEqual expected
+          case Some(Error(message)) =>
+            message mustEqual expected
+          case _ | None =>
             fail(s"invalid object. $input $evaluated")
         }
       }

@@ -2,6 +2,7 @@ package evaluator
 
 import `object`.{
   Bool,
+  Builtin,
   Environment,
   Error,
   Function,
@@ -77,7 +78,11 @@ object Evaluator {
       case Identifier(_, value) =>
         env.get(value) match {
           case Some(value) => Some(value)
-          case None        => Some(Error(s"identifier not found: $value"))
+          case None =>
+            Builtins.defines.get(value) match {
+              case result @ Some(_) => result
+              case _                => Some(Error(s"identifier not found: $value"))
+            }
         }
       case _ => None
     }
@@ -88,14 +93,14 @@ object Evaluator {
       function: Expression,
       arguments: Seq[Expression]
   ) = {
+    def evalArgs = arguments.flatMap(eval(_, env))
     def extendFunctionEnv(
         parameters: Seq[Identifier],
         functionEnv: Environment
     ) = {
       val enclosedEnv = Environment.newEnclosedEnvironment(functionEnv)
-      val args = arguments.flatMap(eval(_, env))
       parameters
-        .zip(args)
+        .zip(evalArgs)
         .foreach { case (parameter, arg) =>
           enclosedEnv.set(parameter.value, arg)
         }
@@ -109,7 +114,8 @@ object Evaluator {
             case Some(Return(value)) => Some(value)
             case result @ _          => result
           }
-        case _ => None
+        case Some(Builtin(fn)) => fn(evalArgs)
+        case _                 => None
       }
     }
     val evaluatedFunction = eval(function, env)

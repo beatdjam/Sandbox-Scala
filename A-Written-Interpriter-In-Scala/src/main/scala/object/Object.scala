@@ -12,6 +12,7 @@ case object NULL_OBJ extends ObjectType("NULL")
 case object RETURN_OBJ extends ObjectType("RETURN")
 case object ERROR_OBJ extends ObjectType("ERROR")
 case object FUNCTION_OBJ extends ObjectType("FUNCTION")
+case object BUILTIN_OBJ extends ObjectType("BUILTIN")
 
 trait Object {
   val objectType: ObjectType
@@ -56,4 +57,9 @@ case class Function(
   val objectType: ObjectType = FUNCTION_OBJ
   override def inspect: String =
     s"fn(${parameters.mkString(", ")}) {\n ${body.getString}\n}"
+}
+
+case class Builtin(fn: Seq[Object] => Option[Object]) extends Object {
+  val objectType: ObjectType = BUILTIN_OBJ
+  override def inspect: String = s"builtin function"
 }
