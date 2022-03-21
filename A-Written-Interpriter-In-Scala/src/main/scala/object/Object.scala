@@ -5,6 +5,7 @@ import ast.{BlockStatement, Identifier}
 sealed abstract class ObjectType(val objectType: String) {
   override def toString: String = objectType
 }
+case object STRING_OBJ extends ObjectType("STRING")
 case object INTEGER_OBJ extends ObjectType("INTEGER")
 case object BOOLEAN_OBJ extends ObjectType("BOOLEAN")
 case object NULL_OBJ extends ObjectType("NULL")
@@ -15,6 +16,11 @@ case object FUNCTION_OBJ extends ObjectType("FUNCTION")
 trait Object {
   val objectType: ObjectType
   def inspect: String
+}
+
+case class Str(value: String) extends Object {
+  val objectType: ObjectType = STRING_OBJ
+  override def inspect: String = value
 }
 
 case class Integer(value: Int) extends Object {

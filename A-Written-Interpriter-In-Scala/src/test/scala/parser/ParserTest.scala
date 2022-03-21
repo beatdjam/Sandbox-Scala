@@ -12,7 +12,8 @@ import ast.{
   LetStatement,
   PrefixExpression,
   Program,
-  ReturnStatement
+  ReturnStatement,
+  StringLiteral
 }
 import lexer.Lexer
 import org.scalatest.FunSpec
@@ -197,6 +198,26 @@ class ParserTest extends FunSpec {
             val expression =
               statement.get.expression.get.asInstanceOf[BooleanExpression]
             expression.value mustEqual boolean
+          case _ =>
+            fail("invalid statement")
+        }
+      }
+    }
+
+    it("string expression") {
+      val list = Seq(("\"hello world\"", "hello world"))
+      list.foreach { case (input, string) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.length mustEqual 1
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[StringLiteral]
+            expression.value mustEqual string
           case _ =>
             fail("invalid statement")
         }

@@ -51,6 +51,8 @@ class LexerTest extends FunSpec {
           |
           |10 == 10;
           |10 != 9;
+          |"foobar"
+          |"foo bar"
           |""".stripMargin
       val list = Seq(
         (LET, "let"),
@@ -127,6 +129,8 @@ class LexerTest extends FunSpec {
         (NOT_EQ, "!="),
         (INT, "9"),
         (SEMICOLON, ";"),
+        (STRING, "foobar"),
+        (STRING, "foo bar"),
         (EOF, "")
       )
 

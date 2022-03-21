@@ -15,7 +15,8 @@ import ast.{
   PrefixExpression,
   Program,
   ReturnStatement,
-  Statement
+  Statement,
+  StringLiteral
 }
 import lexer.Lexer
 import token.{
@@ -44,6 +45,7 @@ import token.{
   RPAREN,
   SEMICOLON,
   SLASH,
+  STRING,
   TRUE,
   Token,
   TokenType
@@ -134,6 +136,9 @@ case class Parser private (
 
     def parseIntegerLiteral(): Expression =
       IntegerLiteral(curToken, curToken.literal.toInt)
+
+    def parseStringLiteral(): Expression =
+      StringLiteral(curToken, curToken.literal)
 
     def parseBlockStatement(): BlockStatement = {
       val current = curToken
@@ -276,6 +281,7 @@ case class Parser private (
     val leftExp = curToken.tokenType match {
       case IDENT        => Some(parseIdentifier())
       case INT          => Some(parseIntegerLiteral())
+      case STRING       => Some(parseStringLiteral())
       case LPAREN       => parseGroupedExpression()
       case TRUE | FALSE => Some(parseBooleanExpression())
       case BANG | MINUS => parsePrefixExpression()

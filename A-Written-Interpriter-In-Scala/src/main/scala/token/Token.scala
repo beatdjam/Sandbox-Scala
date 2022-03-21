@@ -50,6 +50,7 @@ case object EOF extends TokenType("EOF")
 // 識別子 リテラル
 case object IDENT extends TokenType("IDENT")
 case object INT extends TokenType("INT")
+case object STRING extends TokenType("STRING")
 
 // 演算子
 case object ASSIGN extends TokenType("=")

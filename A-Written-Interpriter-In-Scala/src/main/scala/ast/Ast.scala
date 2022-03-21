@@ -62,6 +62,10 @@ case class IntegerLiteral(token: Token, value: Int) extends Expression {
   override def getString: String = value.toString
 }
 
+case class StringLiteral(token: Token, value: String) extends Expression {
+  override def getString: String = value
+}
+
 case class PrefixExpression(token: Token, operator: String, right: Expression)
     extends Expression {
   override def getString: String = s"($operator${right.getString})"

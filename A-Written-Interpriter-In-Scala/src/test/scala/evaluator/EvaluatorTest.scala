@@ -93,7 +93,8 @@ class EvaluatorTest extends FunSpec {
             |addTwo(2);
             |""".stripMargin,
           4
-        )
+        ),
+        ("\"Hello World!\"", "Hello World!")
       )
 
       list.foreach { case (input, expected) =>
@@ -102,6 +103,8 @@ class EvaluatorTest extends FunSpec {
           case Some(Integer(value)) =>
             value mustEqual expected
           case Some(Bool(value)) =>
+            value mustEqual expected
+          case Some(Str(value)) =>
             value mustEqual expected
           case Some(value) =>
             value mustEqual expected

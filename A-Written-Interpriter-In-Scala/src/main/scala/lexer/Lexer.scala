@@ -1,6 +1,6 @@
 package lexer
 
-import token.{EOF, EQ, ILLEGAL, INT, NOT_EQ, Token}
+import token.{EOF, EQ, ILLEGAL, INT, NOT_EQ, STRING, Token}
 
 case class Lexer private (input: String) {
   private var readPosition: Int = 0
@@ -29,6 +29,11 @@ case class Lexer private (input: String) {
       case ch @ ("," | ";" | "(" | ")" | "{" | "}") =>
         readChar()
         Token.fromDelimiterLiteral(ch)
+      case "\"" =>
+        readChar()
+        val literal = read(isString)
+        readChar()
+        Token(STRING, literal)
       case ch if isLetter(ch) =>
         val literal = read(isLetter)
         Token.fromLiteral(literal)
@@ -55,6 +60,8 @@ case class Lexer private (input: String) {
     })
     while (isWhiteSpace) readChar()
   }
+
+  private def isString(ch: String): Boolean = !ch.contains("\"")
 
   private def isLetter(ch: String): Boolean = {
     val list = ('a' to 'z') ++ ('A' to 'Z')

@@ -8,7 +8,8 @@ import `object`.{
   Integer,
   Null,
   Object,
-  Return
+  Return,
+  Str
 }
 import ast.{
   BlockStatement,
@@ -26,7 +27,8 @@ import ast.{
   PrefixExpression,
   Program,
   ReturnStatement,
-  Statement
+  Statement,
+  StringLiteral
 }
 
 object Evaluator {
@@ -68,6 +70,8 @@ object Evaluator {
         evalCallExpression(env, function, arguments)
       case IntegerLiteral(_, value) =>
         Some(Integer(value))
+      case StringLiteral(_, value) =>
+        Some(Str(value))
       case BooleanExpression(_, value) =>
         Some(nativeBoolToBool(value))
       case Identifier(_, value) =>
