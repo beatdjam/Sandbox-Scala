@@ -94,7 +94,8 @@ class EvaluatorTest extends FunSpec {
             |""".stripMargin,
           4
         ),
-        ("\"Hello World!\"", "Hello World!")
+        ("\"Hello World!\"", "Hello World!"),
+        ("\"Hello\" + \" \" + \"World!\"", "Hello World!")
       )
 
       list.foreach { case (input, expected) =>

@@ -206,6 +206,21 @@ object Evaluator {
           )
         )
     }
+    def evalStringInfixExpression(
+        operator: String,
+        leftValue: String,
+        rightValue: String
+    ): Option[Object] = operator match {
+      case "+" => Some(Str(leftValue + rightValue))
+      case _ =>
+        Some(
+          Error(
+            s"unknown operator: ${left
+              .map(_.objectType)
+              .getOrElse("")} $operator ${right.map(_.objectType).getOrElse("")}"
+          )
+        )
+    }
 
     (operator, left, right) match {
       case ("==", _, _) =>
@@ -214,6 +229,8 @@ object Evaluator {
         Some(nativeBoolToBool(left != right))
       case (_, Some(Integer(leftValue)), Some(Integer(rightValue))) =>
         evalIntegerInfixExpression(operator, leftValue, rightValue)
+      case (_, Some(Str(leftValue)), Some(Str(rightValue))) =>
+        evalStringInfixExpression(operator, leftValue, rightValue)
       case (_, Some(leftValue), Some(rightValue)) =>
         if (leftValue.objectType != rightValue.objectType) {
           Some(
