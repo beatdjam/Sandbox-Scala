@@ -1,10 +1,21 @@
 package evaluator
 
-import `object`.{Bool, Environment, Error, Integer, Null, Object, Return}
+import `object`.{
+  Bool,
+  Environment,
+  Error,
+  Function,
+  Integer,
+  Null,
+  Object,
+  Return
+}
 import ast.{
   BlockStatement,
   BooleanExpression,
+  CallExpression,
   ExpressionStatement,
+  FunctionLiteral,
   Identifier,
   IfExpression,
   InfixExpression,
@@ -36,7 +47,6 @@ object Evaluator {
             None
           case None => None
         }
-
       case BlockStatement(_, statements) =>
         evalBlockStatements(statements, env)
       case ReturnStatement(_, Some(returnValue)) =>
@@ -50,6 +60,23 @@ object Evaluator {
           if (isTruthy(condition)) eval(consequence, env)
           else if (alternative.isDefined) alternative.flatMap(eval(_, env))
           else Some(NULL)
+        }
+      case FunctionLiteral(_, parameters, body) =>
+        Some(Function(parameters, body, env))
+      case CallExpression(_, function, arguments) =>
+        val evaluatedFunction = eval(function, env)
+        evaluatedFunction match {
+          case Some(Function(parameters, body, _)) =>
+            val enclosedEnv = Environment.newEnclosedEnvironment(env)
+            val args = arguments.flatMap(eval(_, env))
+            parameters.zip(args).foreach { case (parameter, arg) =>
+              enclosedEnv.set(parameter.value, arg)
+            }
+            eval(body, enclosedEnv) match {
+              case Some(Return(value)) => Some(value)
+              case result @ _          => result
+            }
+          case None => None
         }
       case IntegerLiteral(_, value) =>
         Some(Integer(value))

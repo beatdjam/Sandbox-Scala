@@ -1,4 +1,7 @@
 package `object`
+
+import ast.{BlockStatement, Identifier}
+
 sealed abstract class ObjectType(val objectType: String) {
   override def toString: String = objectType
 }
@@ -7,6 +10,7 @@ case object BOOLEAN_OBJ extends ObjectType("BOOLEAN")
 case object NULL_OBJ extends ObjectType("NULL")
 case object RETURN_OBJ extends ObjectType("RETURN")
 case object ERROR_OBJ extends ObjectType("ERROR")
+case object FUNCTION_OBJ extends ObjectType("FUNCTION")
 
 trait Object {
   val objectType: ObjectType
@@ -36,4 +40,14 @@ case class Return(value: Object) extends Object {
 case class Error(message: String) extends Object {
   val objectType: ObjectType = ERROR_OBJ
   override def inspect: String = s"ERROR: $message"
+}
+
+case class Function(
+    parameters: Seq[Identifier],
+    body: BlockStatement,
+    env: Environment
+) extends Object {
+  val objectType: ObjectType = FUNCTION_OBJ
+  override def inspect: String =
+    s"fn(${parameters.mkString(", ")}) {\n ${body.getString}\n}"
 }

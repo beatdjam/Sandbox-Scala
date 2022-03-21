@@ -76,7 +76,13 @@ class EvaluatorTest extends FunSpec {
         ("let a = 5; a;", 5),
         ("let a = 5 * 5; a;", 25),
         ("let a = 5; let b = a; b;", 5),
-        ("let a = 5; let b = a; let c = a + b + 5; c;", 15)
+        ("let a = 5; let b = a; let c = a + b + 5; c;", 15),
+        ("let identity = fn(x) { x; }; identity(5);", 5),
+        ("let identity = fn(x) { return x; }; identity(5);", 5),
+        ("let double = fn(x) { x * 2; }; double(5);", 10),
+        ("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
+        ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20),
+        ("fn(x) { x; }(5)", 5)
       )
 
       list.foreach { case (input, expected) =>
@@ -89,7 +95,21 @@ class EvaluatorTest extends FunSpec {
           case Some(value) =>
             value mustEqual expected
           case None =>
-            fail("invalid object")
+            fail(s"invalid object. $input $evaluated")
+        }
+      }
+    }
+    it("test function") {
+      val list = Seq(
+        ("fn(x) { x + 2; };", Seq("x"), "(x + 2)")
+      )
+      list.foreach { case (input, expectedParameter, expectedBody) =>
+        val evaluated = testEval(input)
+        evaluated match {
+          case Some(Function(parameters, body, _)) =>
+            parameters.map(_.getString) mustBe expectedParameter
+            body.getString mustBe expectedBody
+          case None => fail(s"invalid object. $input $evaluated")
         }
       }
     }
