@@ -14,6 +14,7 @@ import ast.{
   BlockStatement,
   BooleanExpression,
   CallExpression,
+  Expression,
   ExpressionStatement,
   FunctionLiteral,
   Identifier,
@@ -64,20 +65,7 @@ object Evaluator {
       case FunctionLiteral(_, parameters, body) =>
         Some(Function(parameters, body, env))
       case CallExpression(_, function, arguments) =>
-        val evaluatedFunction = eval(function, env)
-        evaluatedFunction match {
-          case Some(Function(parameters, body, _)) =>
-            val enclosedEnv = Environment.newEnclosedEnvironment(env)
-            val args = arguments.flatMap(eval(_, env))
-            parameters.zip(args).foreach { case (parameter, arg) =>
-              enclosedEnv.set(parameter.value, arg)
-            }
-            eval(body, enclosedEnv) match {
-              case Some(Return(value)) => Some(value)
-              case result @ _          => result
-            }
-          case None => None
-        }
+        evalCallExpression(env, function, arguments)
       case IntegerLiteral(_, value) =>
         Some(Integer(value))
       case BooleanExpression(_, value) =>
@@ -89,6 +77,39 @@ object Evaluator {
         }
       case _ => None
     }
+  }
+
+  private def evalCallExpression(
+      env: Environment,
+      function: Expression,
+      arguments: Seq[Expression]
+  ) = {
+    def extendFunctionEnv(
+        parameters: Seq[Identifier],
+        functionEnv: Environment
+    ) = {
+      val enclosedEnv = Environment.newEnclosedEnvironment(functionEnv)
+      val args = arguments.flatMap(eval(_, env))
+      parameters
+        .zip(args)
+        .foreach { case (parameter, arg) =>
+          enclosedEnv.set(parameter.value, arg)
+        }
+      enclosedEnv
+    }
+    def unwrapReturnValue(evaluatedFunction: Option[Object]) = {
+      evaluatedFunction match {
+        case Some(Function(parameters, body, functionEnv)) =>
+          val extendedFunctionEnv = extendFunctionEnv(parameters, functionEnv)
+          eval(body, extendedFunctionEnv) match {
+            case Some(Return(value)) => Some(value)
+            case result @ _          => result
+          }
+        case _ => None
+      }
+    }
+    val evaluatedFunction = eval(function, env)
+    unwrapReturnValue(evaluatedFunction)
   }
 
   private def evalStatements(

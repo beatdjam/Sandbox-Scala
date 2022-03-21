@@ -8,6 +8,7 @@ import org.scalatest.MustMatchers.convertToAnyMustWrapper
 
 class EvaluatorTest extends FunSpec {
   describe("EvaluatorTest") {
+
     it("input eval") {
       val list = Seq(
         ("5", 5),
@@ -82,7 +83,17 @@ class EvaluatorTest extends FunSpec {
         ("let double = fn(x) { x * 2; }; double(5);", 10),
         ("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
         ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20),
-        ("fn(x) { x; }(5)", 5)
+        ("fn(x) { x; }(5)", 5),
+        (
+          """
+            |let newAdder = fn(x) { 
+            |   fn(y) { x + y }; 
+            |};
+            |let addTwo = newAdder(2);
+            |addTwo(2);
+            |""".stripMargin,
+          4
+        )
       )
 
       list.foreach { case (input, expected) =>
