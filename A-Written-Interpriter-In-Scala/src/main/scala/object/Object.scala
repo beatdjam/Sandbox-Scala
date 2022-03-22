@@ -56,7 +56,7 @@ case class Function(
 ) extends Object {
   val objectType: ObjectType = FUNCTION_OBJ
   override def inspect: String =
-    s"fn(${parameters.mkString(", ")}) {\n ${body.getString}\n}"
+    s"fn(${parameters.map(_.value).mkString(", ")}) {\n ${body.getString}\n}"
 }
 
 case class Builtin(fn: Seq[Object] => Option[Object]) extends Object {
