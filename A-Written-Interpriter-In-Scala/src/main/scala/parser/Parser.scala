@@ -1,6 +1,7 @@
 package parser
 
 import ast.{
+  ArrayLiteral,
   BlockStatement,
   BooleanExpression,
   CallExpression,
@@ -9,6 +10,7 @@ import ast.{
   FunctionLiteral,
   Identifier,
   IfExpression,
+  IndexExpression,
   InfixExpression,
   IntegerLiteral,
   LetStatement,
@@ -19,6 +21,7 @@ import ast.{
   StringLiteral
 }
 import lexer.Lexer
+import parser.Priority.LOWEST
 import token.{
   ASSIGN,
   ASTERISK,
@@ -34,6 +37,7 @@ import token.{
   IF,
   INT,
   LBRACE,
+  LBRACKET,
   LET,
   LPAREN,
   LT,
@@ -41,6 +45,7 @@ import token.{
   NOT_EQ,
   PLUS,
   RBRACE,
+  RBRACKET,
   RETURN,
   RPAREN,
   SEMICOLON,
@@ -54,7 +59,7 @@ import token.{
 import scala.collection.mutable.ListBuffer
 
 object Priority extends Enumeration {
-  val LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL = Value.id
+  val LOWEST, EQUALS, LESSGREATER, SUM, PRODUCT, PREFIX, CALL, INDEX = Value.id
 }
 
 case class Parser private (
@@ -125,7 +130,8 @@ case class Parser private (
       MINUS -> Priority.SUM,
       SLASH -> Priority.PRODUCT,
       ASTERISK -> Priority.PRODUCT,
-      LPAREN -> Priority.CALL
+      LPAREN -> Priority.CALL,
+      LBRACKET -> Priority.INDEX
     )
 
     def peekPrecedence(): Int =
@@ -180,12 +186,16 @@ case class Parser private (
 
     def parsePrefixExpression(): Option[Expression] = {
       val current = curToken
-      nextToken()
-
-      parseExpression(Priority.PREFIX) match {
-        case Some(right) =>
-          Some(PrefixExpression(current, current.literal, right))
-        case None => None
+      if (current.tokenType != LBRACKET) {
+        nextToken()
+        parseExpression(Priority.PREFIX) match {
+          case Some(right) =>
+            Some(PrefixExpression(current, current.literal, right))
+          case None => None
+        }
+      } else {
+        val expressions = parseExpressionList(RBRACKET)
+        Some(ArrayLiteral(current, expressions))
       }
     }
 
@@ -193,7 +203,12 @@ case class Parser private (
       val current = curToken
       val precedence = curPrecedence()
       if (curToken.tokenType == LPAREN) Some(parseCallExpression(left))
-      else {
+      else if (curToken.tokenType == LBRACKET) {
+        nextToken()
+        val index = parseExpression(LOWEST)
+        if (expectPeek(RBRACKET)) index.map(IndexExpression(current, left, _))
+        else None
+      } else {
         nextToken()
         parseExpression(precedence) match {
           case Some(right) =>
@@ -254,12 +269,12 @@ case class Parser private (
 
     def parseCallExpression(leftExp: Expression): Expression = {
       val current = curToken
-      val arguments = parseCallArguments()
+      val arguments = parseExpressionList(RPAREN)
       CallExpression(current, leftExp, arguments)
     }
 
-    def parseCallArguments(): Seq[Expression] = {
-      if (peekTokenIs(RPAREN)) {
+    def parseExpressionList(endToken: TokenType): Seq[Expression] = {
+      if (peekTokenIs(endToken)) {
         nextToken()
         Nil
       } else {
@@ -273,20 +288,20 @@ case class Parser private (
           parseExpression(Priority.LOWEST).map(buf.addOne)
         }
 
-        if (expectPeek(RPAREN)) buf.toList
+        if (expectPeek(endToken)) buf.toList
         else Nil
       }
     }
 
     val leftExp = curToken.tokenType match {
-      case IDENT        => Some(parseIdentifier())
-      case INT          => Some(parseIntegerLiteral())
-      case STRING       => Some(parseStringLiteral())
-      case LPAREN       => parseGroupedExpression()
-      case TRUE | FALSE => Some(parseBooleanExpression())
-      case BANG | MINUS => parsePrefixExpression()
-      case IF           => parseIfExpression()
-      case FUNCTION     => parseFunctionLiteral()
+      case IDENT                   => Some(parseIdentifier())
+      case INT                     => Some(parseIntegerLiteral())
+      case STRING                  => Some(parseStringLiteral())
+      case LPAREN                  => parseGroupedExpression()
+      case TRUE | FALSE            => Some(parseBooleanExpression())
+      case BANG | MINUS | LBRACKET => parsePrefixExpression()
+      case IF                      => parseIfExpression()
+      case FUNCTION                => parseFunctionLiteral()
       case _ =>
         _errors.addOne(
           s"no prefix parse function for ${curToken.tokenType.token} found"
@@ -294,7 +309,8 @@ case class Parser private (
         None
     }
     peekToken.tokenType match {
-      case LPAREN | PLUS | MINUS | SLASH | ASTERISK | EQ | NOT_EQ | LT | GT =>
+      case LBRACKET | LPAREN | PLUS | MINUS | SLASH | ASTERISK | EQ | NOT_EQ |
+          LT | GT =>
         getInfixExpression(leftExp)
       case _ => leftExp
     }

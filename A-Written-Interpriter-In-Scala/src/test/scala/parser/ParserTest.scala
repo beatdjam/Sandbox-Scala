@@ -1,12 +1,14 @@
 package parser
 
 import ast.{
+  ArrayLiteral,
   BooleanExpression,
   CallExpression,
   ExpressionStatement,
   FunctionLiteral,
   Identifier,
   IfExpression,
+  IndexExpression,
   InfixExpression,
   IntegerLiteral,
   LetStatement,
@@ -279,6 +281,51 @@ class ParserTest extends FunSpec {
       }
     }
 
+    it("array literals") {
+      val list = Seq(
+        ("[1, 2 * 2, 3 + 3]", 3, Seq("1", "(2 * 2)", "(3 + 3)"))
+      )
+      list.foreach { case (input, len, values) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.length mustBe 1
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[ArrayLiteral]
+
+            expression.elements.size mustEqual len
+            expression.elements.map(_.getString) mustEqual values
+
+          case _ =>
+            fail("invalid statement")
+        }
+      }
+    }
+
+    it("index expressions") {
+      val list = Seq(("myArray[1 + 1]", "myArray", "(1 + 1)"))
+      list.foreach { case (input, ident, index) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[IndexExpression]
+            expression.left.getString mustEqual ident
+            expression.index.getString mustEqual index
+          case _ =>
+            fail("invalid statement")
+        }
+      }
+    }
+
     it("call expression") {
       val list = Seq(
         ("add(1, 2 * 3, 4 + 5)", "add", Seq("1", "(2 * 3)", "(4 + 5)"))
@@ -334,7 +381,12 @@ class ParserTest extends FunSpec {
           "add(a, b, 1, 2 * 3, 4 + 5, add(6, (7 * 8)))",
           "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))"
         ),
-        ("add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))")
+        ("add(a + b + c * d / f + g)", "add((((a + b) + ((c * d) / f)) + g))"),
+        ("a * [1, 2, 3, 4][b * c] * d", "((a * ([1, 2, 3, 4][(b * c)])) * d)"),
+        (
+          "add(a * b[2], b[1], 2 * [1, 2][1])",
+          "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))"
+        )
       )
       list.foreach { case (input, expected) =>
         val lexer = Lexer.from(input)

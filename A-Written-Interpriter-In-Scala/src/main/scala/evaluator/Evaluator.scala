@@ -1,18 +1,8 @@
 package evaluator
 
-import `object`.{
-  Bool,
-  Builtin,
-  Environment,
-  Error,
-  Function,
-  Integer,
-  Null,
-  Object,
-  Return,
-  Str
-}
+import `object`._
 import ast.{
+  ArrayLiteral,
   BlockStatement,
   BooleanExpression,
   CallExpression,
@@ -21,6 +11,7 @@ import ast.{
   FunctionLiteral,
   Identifier,
   IfExpression,
+  IndexExpression,
   InfixExpression,
   IntegerLiteral,
   LetStatement,
@@ -83,6 +74,23 @@ object Evaluator {
               case result @ Some(_) => result
               case _                => Some(Error(s"identifier not found: $value"))
             }
+        }
+      case ArrayLiteral(_, elements) =>
+        val evaluated = elements.flatMap(eval(_, env))
+        Some(Array(evaluated))
+      case IndexExpression(_, leftExp, indexExp) =>
+        val left = eval(leftExp, env)
+        val index = eval(indexExp, env)
+        (left, index) match {
+          case (Some(Array(elements)), Some(Integer(value))) =>
+            if (elements.isDefinedAt(value)) Some(elements(value))
+            else Some(NULL)
+          case _ =>
+            Some(
+              Error(
+                s"index operator not supported: ${left.map(_.objectType).getOrElse("")}"
+              )
+            )
         }
       case _ => None
     }

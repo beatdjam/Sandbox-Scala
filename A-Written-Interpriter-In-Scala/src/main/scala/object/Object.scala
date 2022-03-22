@@ -13,6 +13,7 @@ case object RETURN_OBJ extends ObjectType("RETURN")
 case object ERROR_OBJ extends ObjectType("ERROR")
 case object FUNCTION_OBJ extends ObjectType("FUNCTION")
 case object BUILTIN_OBJ extends ObjectType("BUILTIN")
+case object ARRAY_OBJ extends ObjectType("ARRAY")
 
 trait Object {
   val objectType: ObjectType
@@ -47,6 +48,11 @@ case class Return(value: Object) extends Object {
 case class Error(message: String) extends Object {
   val objectType: ObjectType = ERROR_OBJ
   override def inspect: String = s"ERROR: $message"
+}
+
+case class Array(elements: Seq[Object]) extends Object {
+  val objectType: ObjectType = ARRAY_OBJ
+  override def inspect: String = s"[${elements.map(_.inspect).mkString(", ")}]"
 }
 
 case class Function(

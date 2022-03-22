@@ -4,6 +4,7 @@ import lexer.Lexer
 import org.scalatest.FunSpec
 import parser.Parser
 import `object`._
+import ast.ArrayLiteral
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
 
 class EvaluatorTest extends FunSpec {
@@ -100,7 +101,17 @@ class EvaluatorTest extends FunSpec {
         ("len(\"four\")", 4),
         ("len(\"hello world\")", 11),
         ("len(1)", "argument to len not supported, got INTEGER"),
-        ("len(\"one\",\"two\")", "wrong number of arguments. got=2, want=1")
+        ("len(\"one\",\"two\")", "wrong number of arguments. got=2, want=1"),
+        ("[1, 2, 3][0]", 1),
+        ("[1, 2, 3][1]", 2),
+        ("[1, 2, 3][2]", 3),
+        ("let i = 0; [1][i];", 1),
+        ("[1, 2, 3][1 + 1];", 3),
+        ("let myArray = [1, 2, 3];myArray[2];", 3),
+        ("let myArray = [1, 2, 3];myArray[0] + myArray[1] + myArray[2];", 6),
+        ("let myArray = [1, 2, 3];let i = myArray[0];myArray[i];", 2),
+        ("[1, 2, 3][3]", Null()),
+        ("[1, 2, 3][-1]", Null())
       )
 
       list.foreach { case (input, expected) =>
@@ -112,6 +123,8 @@ class EvaluatorTest extends FunSpec {
             value mustEqual expected
           case Some(Str(value)) =>
             value mustEqual expected
+          case Some(Error(message)) =>
+            message mustEqual expected
           case Some(value) =>
             value mustEqual expected
           case None =>
@@ -155,6 +168,20 @@ class EvaluatorTest extends FunSpec {
         }
       }
     }
+    it("array test") {
+      val list = Seq(
+        ("[1, 2 * 2, 3 + 3]", Seq("1", "4", "6"))
+      )
+      list.foreach { case (input, expected) =>
+        val evaluated = testEval(input)
+        evaluated match {
+          case Some(Array(elements)) =>
+            elements.map(_.inspect) mustEqual expected
+          case None => fail(s"invalid object. $input $evaluated")
+        }
+      }
+    }
+
     it("error handling") {
       val list = Seq(
         ("5 + true", "type mismatch: INTEGER + BOOLEAN"),

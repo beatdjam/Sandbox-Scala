@@ -63,7 +63,17 @@ case class IntegerLiteral(token: Token, value: Int) extends Expression {
 }
 
 case class StringLiteral(token: Token, value: String) extends Expression {
-  override def getString: String = value
+  override def getString: String = s"\"$value\""
+}
+
+case class ArrayLiteral(token: Token, elements: Seq[Expression])
+    extends Expression {
+  override def getString: String =
+    s"[${elements.map(_.getString).mkString(", ")}]"
+}
+
+case class IndexExpression(token: Token, left : Expression, index: Expression) extends Expression {
+  override def getString: String = s"(${left.getString}[${index.getString}])"
 }
 
 case class PrefixExpression(token: Token, operator: String, right: Expression)
@@ -103,8 +113,7 @@ case class FunctionLiteral(
     parameters: Seq[Identifier],
     body: BlockStatement
 ) extends Expression {
-  override def getString: String =
-    s"${tokenLiteral()}(${parameters.mkString(", ")}) ${body.getString}"
+  override def getString: String = s"${tokenLiteral()}(${parameters.map(_.value).mkString(", ")}) ${body.getString}"
 }
 
 case class CallExpression(
