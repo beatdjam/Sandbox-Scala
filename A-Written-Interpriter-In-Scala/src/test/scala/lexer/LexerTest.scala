@@ -8,8 +8,10 @@ class LexerTest extends FunSpec {
 
   describe("LexerTest") {
     it("first case") {
-      val input = "=+(){},;"
+      val input = "[]=+(){},;"
       val list = Seq(
+        (LBRACKET, "["),
+        (RBRACKET, "]"),
         (ASSIGN, "="),
         (PLUS, "+"),
         (LPAREN, "("),
@@ -53,6 +55,7 @@ class LexerTest extends FunSpec {
           |10 != 9;
           |"foobar"
           |"foo bar"
+          |[1, 2];
           |""".stripMargin
       val list = Seq(
         (LET, "let"),
@@ -131,6 +134,12 @@ class LexerTest extends FunSpec {
         (SEMICOLON, ";"),
         (STRING, "foobar"),
         (STRING, "foo bar"),
+        (LBRACKET, "["),
+        (INT, "1"),
+        (COMMA, ","),
+        (INT, "2"),
+        (RBRACKET, "]"),
+        (SEMICOLON, ";"),
         (EOF, "")
       )
 

@@ -37,6 +37,8 @@ object Token {
       case ")" => RPAREN
       case "{" => LBRACE
       case "}" => RBRACE
+      case "[" => LBRACKET
+      case "]" => RBRACKET
       case _   => throw new IllegalArgumentException("invalid delimiter")
     }
     Token(tokenType, literal)
@@ -71,6 +73,8 @@ case object LPAREN extends TokenType("(")
 case object RPAREN extends TokenType(")")
 case object LBRACE extends TokenType("{")
 case object RBRACE extends TokenType("}")
+case object LBRACKET extends TokenType("[")
+case object RBRACKET extends TokenType("]")
 
 // キーワード
 case object FUNCTION extends TokenType("FUNCTION")

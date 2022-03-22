@@ -26,7 +26,7 @@ case class Lexer private (input: String) {
       case ch @ ("=" | "+" | "-" | "!" | "/" | "*" | "<" | ">") =>
         readChar()
         Token.fromOperatorLiteral(ch)
-      case ch @ ("," | ";" | "(" | ")" | "{" | "}") =>
+      case ch @ ("," | ";" | "(" | ")" | "{" | "}" | "[" | "]") =>
         readChar()
         Token.fromDelimiterLiteral(ch)
       case "\"" =>
