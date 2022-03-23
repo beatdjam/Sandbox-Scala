@@ -142,7 +142,21 @@ class EvaluatorTest extends FunSpec {
         ("len(\"one\",\"two\")", "wrong number of arguments. got=2, want=1"),
         ("len([1, 2, 3])", 3),
         ("len([])", 0),
-        ("len([1 + 1, \"test\", if (10 > 9) { 5 } else { 6 }])", 3)
+        ("len([1 + 1, \"test\", if (10 > 9) { 5 } else { 6 }])", 3),
+        ("first([1, 2, 3])", 1),
+        ("first([])", Null()),
+        ("first(\"one\")", "o"),
+        ("first(\"\")", Null()),
+        ("last([1, 2, 3])", 3),
+        ("last([])", Null()),
+        ("last(\"one\")", "e"),
+        ("last(\"\")", Null()),
+        ("rest([1, 2, 3])", Seq("2", "3")),
+        ("rest([])", Null()),
+        ("rest(\"one\")", "ne"),
+        ("rest(\"\")", Null()),
+        ("push([1, 2, 3], 4)", Seq("1", "2", "3", "4")),
+        ("push([], 0)", Seq("0"))
       )
 
       list.foreach { case (input, expected) =>
@@ -150,8 +164,14 @@ class EvaluatorTest extends FunSpec {
         evaluated match {
           case Some(Integer(value)) =>
             value mustEqual expected
+          case Some(Str(value)) =>
+            value mustEqual expected
+          case Some(Array(elements)) =>
+            elements.map(_.inspect) mustEqual expected
           case Some(Error(message)) =>
             message mustEqual expected
+          case Some(value) =>
+            value mustEqual expected
           case _ | None =>
             fail(s"invalid object. $input $evaluated")
         }
