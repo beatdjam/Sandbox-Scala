@@ -1,6 +1,6 @@
 package evaluator
 
-import `object`.{Builtin, Error, Integer, Object, Str}
+import `object`.{Builtin, Error, Integer, Object, Str, Array}
 
 object Builtins {
   val defines = Map(
@@ -9,7 +9,8 @@ object Builtins {
         Some(Error(s"wrong number of arguments. got=${args.length}, want=1"))
       } else {
         args.headOption.flatMap {
-          case Str(value) => Some(Integer(value.length))
+          case Str(value)      => Some(Integer(value.length))
+          case Array(elements) => Some(Integer(elements.length))
           case value @ _ =>
             Some(
               Error(s"argument to len not supported, got ${value.objectType}")
