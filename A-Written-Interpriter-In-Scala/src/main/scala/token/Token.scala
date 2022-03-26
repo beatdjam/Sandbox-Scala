@@ -32,6 +32,7 @@ object Token {
   def fromDelimiterLiteral(literal: String): Token = {
     val tokenType = literal match {
       case "," => COMMA
+      case ":" => COLON
       case ";" => SEMICOLON
       case "(" => LPAREN
       case ")" => RPAREN
@@ -68,6 +69,7 @@ case object NOT_EQ extends TokenType("!=")
 
 // デリミタ
 case object COMMA extends TokenType(",")
+case object COLON extends TokenType(";")
 case object SEMICOLON extends TokenType(";")
 case object LPAREN extends TokenType("(")
 case object RPAREN extends TokenType(")")
