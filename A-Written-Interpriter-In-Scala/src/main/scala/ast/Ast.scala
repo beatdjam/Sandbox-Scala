@@ -102,8 +102,8 @@ case class IfExpression(
 ) extends Expression {
   override def getString: String =
     s"""
-       |if ${condition.getString} ${consequence.getString} ${alternative
-      .map("else " + _.getString)
+       |if ${condition.getString} {${consequence.getString}} ${alternative
+      .map(s"else {" + _.getString + "}")
       .getOrElse("")}
        |""".stripMargin
 }

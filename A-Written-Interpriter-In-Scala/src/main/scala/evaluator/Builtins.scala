@@ -93,6 +93,11 @@ object Builtins {
             )
         }
       }
+    ),
+    "puts" -> Builtin((args: Seq[Object]) =>
+      if (args.length != 1) {
+        Some(Error(s"wrong number of arguments. got=${args.length}, want=1"))
+      } else args.headOption.flatMap { arg => Some(Str(arg.inspect)) }
     )
   )
 }
