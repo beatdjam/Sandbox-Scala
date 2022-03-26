@@ -13,14 +13,18 @@ object Builtins {
           case Array(elements) => Some(Integer(elements.length))
           case value @ _ =>
             Some(
-              Error(s"argument to len not supported, got ${value.objectType}")
+              Error(
+                s"len: argument to len not supported, got ${value.objectType}"
+              )
             )
         }
       }
     ),
     "first" -> Builtin((args: Seq[Object]) =>
       if (args.length != 1) {
-        Some(Error(s"wrong number of arguments. got=${args.length}, want=1"))
+        Some(
+          Error(s"first: wrong number of arguments. got=${args.length}, want=1")
+        )
       } else {
         args.headOption.flatMap {
           case Str(value) =>
@@ -33,14 +37,18 @@ object Builtins {
             )
           case value @ _ =>
             Some(
-              Error(s"argument to len not supported, got ${value.objectType}")
+              Error(
+                s"first: argument to len not supported, got ${value.objectType}"
+              )
             )
         }
       }
     ),
     "last" -> Builtin((args: Seq[Object]) =>
       if (args.length != 1) {
-        Some(Error(s"wrong number of arguments. got=${args.length}, want=1"))
+        Some(
+          Error(s"last: wrong number of arguments. got=${args.length}, want=1")
+        )
       } else {
         args.headOption.flatMap {
           case Str(value) =>
@@ -55,14 +63,18 @@ object Builtins {
             )
           case value @ _ =>
             Some(
-              Error(s"argument to len not supported, got ${value.objectType}")
+              Error(
+                s"last: argument to len not supported, got ${value.objectType}"
+              )
             )
         }
       }
     ),
     "rest" -> Builtin((args: Seq[Object]) =>
       if (args.length != 1) {
-        Some(Error(s"wrong number of arguments. got=${args.length}, want=1"))
+        Some(
+          Error(s"rest: wrong number of arguments. got=${args.length}, want=1")
+        )
       } else {
         args.headOption.flatMap {
           case Str(value) =>
@@ -72,32 +84,45 @@ object Builtins {
           case Array(elements) =>
             val rest = if (elements.nonEmpty) elements.tail else Nil
             if (rest.nonEmpty) Some(Array(rest))
-            else Some(Null())
+            else Some(Array(Nil))
           case value @ _ =>
             Some(
-              Error(s"argument to len not supported, got ${value.objectType}")
+              Error(
+                s"rest: argument to len not supported, got ${value.objectType}"
+              )
             )
         }
       }
     ),
     "push" -> Builtin((args: Seq[Object]) =>
       if (args.length != 2) {
-        Some(Error(s"wrong number of arguments. got=${args.length}, want=2"))
+        println(args)
+        Some(
+          Error(s"push: wrong number of arguments. got=${args.length}, want=2")
+        )
       } else {
         args.head match {
           case Array(elements) =>
             Some(Array(elements :+ args(1)))
           case value @ _ =>
             Some(
-              Error(s"argument to len not supported, got ${value.objectType}")
+              Error(
+                s"push: argument to len not supported, got ${value.objectType}"
+              )
             )
         }
       }
     ),
     "puts" -> Builtin((args: Seq[Object]) =>
       if (args.length != 1) {
-        Some(Error(s"wrong number of arguments. got=${args.length}, want=1"))
-      } else args.headOption.flatMap { arg => Some(Str(arg.inspect)) }
+        Some(
+          Error(s"puts: wrong number of arguments. got=${args.length}, want=1")
+        )
+      } else
+        args.headOption.flatMap { arg =>
+          println(arg.inspect)
+          None
+        }
     )
   )
 }
