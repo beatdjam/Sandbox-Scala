@@ -6,11 +6,6 @@ import parser.Parser
 import scala.io.StdIn.readLine
 
 object Application {
-  // FIXME: 再帰を使うとStackOverflowして死ぬ
-  // >>let map = fn(arr, f) { let iter = fn(arr, accumulated) {if (len(arr) == 0) { accumulated } else {iter(rest(arr), push(accumulated, f(first(arr))))}}; iter(arr, []); };
-  // >>let double = fn(x) { x * 2};
-  // >>let a = [1,2, 3,4];
-  // >>map(a, double);
   def main(args: Array[String]): Unit = {
     println("This is the Monkey programming language!")
     val env = Environment.newEnvironment
