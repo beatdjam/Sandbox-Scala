@@ -69,3 +69,14 @@ case class Builtin(fn: Seq[Object] => Option[Object]) extends Object {
   val objectType: ObjectType = BUILTIN_OBJ
   override def inspect: String = s"builtin function"
 }
+
+case class HashKey(private val key: Any) extends Object {
+  val value: Int = key.hashCode()
+  val objectType: ObjectType = key match {
+    case _: String  => STRING_OBJ
+    case _: Integer => INTEGER_OBJ
+    case _: Boolean => BOOLEAN_OBJ
+    case _          => ERROR_OBJ
+  }
+  override def inspect: String = key.toString
+}
