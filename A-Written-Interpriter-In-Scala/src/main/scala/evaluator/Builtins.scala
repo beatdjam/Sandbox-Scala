@@ -6,7 +6,9 @@ object Builtins {
   val defines = Map(
     "len" -> Builtin((args: Seq[Object]) =>
       if (args.length != 1) {
-        Some(Error(s"wrong number of arguments. got=${args.length}, want=1"))
+        Some(
+          Error(s"len: wrong number of arguments. got=${args.length}, want=1")
+        )
       } else {
         args.headOption.flatMap {
           case Str(value)      => Some(Integer(value.length))
@@ -80,7 +82,7 @@ object Builtins {
           case Str(value) =>
             val rest = value.tail
             if (rest.nonEmpty) Some(Str(rest))
-            else Some(Null())
+            else Some(Str(""))
           case Array(elements) =>
             val rest = if (elements.nonEmpty) elements.tail else Nil
             if (rest.nonEmpty) Some(Array(rest))
