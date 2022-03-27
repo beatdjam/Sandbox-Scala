@@ -86,6 +86,15 @@ object Evaluator {
           case (Some(Array(elements)), Some(Integer(value))) =>
             if (elements.isDefinedAt(value)) Some(elements(value))
             else Some(NULL)
+          case (Some(Hash(pairs)), Some(key)) =>
+            key match {
+              case key: Hashable =>
+                pairs.get(key) match {
+                  case Some(value) => Some(value)
+                  case None        => Some(NULL)
+                }
+              case _ => Some(Error(s"unusable as hash key: ${key.objectType}"))
+            }
           case _ =>
             Some(
               Error(

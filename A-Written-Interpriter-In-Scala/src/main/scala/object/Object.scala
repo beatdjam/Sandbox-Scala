@@ -21,17 +21,21 @@ trait Object {
   def inspect: String
 }
 
-case class Str(value: String) extends Object {
+trait Hashable {
+  val value: Any
+}
+
+case class Str(value: String) extends Object with Hashable {
   val objectType: ObjectType = STRING_OBJ
   override def inspect: String = value
 }
 
-case class Integer(value: Int) extends Object {
+case class Integer(value: Int) extends Object with Hashable {
   val objectType: ObjectType = INTEGER_OBJ
   override def inspect: String = value.toString
 }
 
-case class Bool(value: Boolean) extends Object {
+case class Bool(value: Boolean) extends Object with Hashable {
   val objectType: ObjectType = BOOLEAN_OBJ
   override def inspect: String = value.toString
 }

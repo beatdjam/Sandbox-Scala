@@ -4,7 +4,6 @@ import lexer.Lexer
 import org.scalatest.FunSpec
 import parser.Parser
 import `object`._
-import ast.ArrayLiteral
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
 
 class EvaluatorTest extends FunSpec {
@@ -114,7 +113,39 @@ class EvaluatorTest extends FunSpec {
         ("let myArray = [1, 2, 3];myArray[0] + myArray[1] + myArray[2];", 6),
         ("let myArray = [1, 2, 3];let i = myArray[0];myArray[i];", 2),
         ("[1, 2, 3][3]", Null()),
-        ("[1, 2, 3][-1]", Null())
+        ("[1, 2, 3][-1]", Null()),
+        ("{\"foo\": 5}[\"foo\"]", 5),
+        ("{\"foo\": 5}[\"bar\"]", Null()),
+        ("let key = \"foo\";{\"foo\": 5}[key]", 5),
+        ("{}[\"foo\"]", Null()),
+        ("{5: 5}[5]", 5),
+        ("{true: 5}[true]", 5),
+        ("{false: 5}[false]", 5),
+        ("{\"foo\": 5}[\"foo\"]", 5),
+        ("{\"foo\": 5}[\"bar\"]", Null()),
+        ("{5: 5}[5]", 5),
+        ("{true: 5}[true]", 5),
+        ("{false: 5}[false]", 5),
+        ("{\"foo\": 5}[\"foo\"]", 5),
+        ("{\"foo\": 5}[\"bar\"]", Null()),
+        ("{5: 5}[5]", 5),
+        ("{true: 5}[true]", 5),
+        ("{false: 5}[false]", 5),
+        ("{\"foo\": 5}[\"foo\"]", 5),
+        ("{\"foo\": 5}[\"bar\"]", Null()),
+        ("{5: 5}[5]", 5),
+        ("{true: 5}[true]", 5),
+        ("{false: 5}[false]", 5),
+        ("{\"foo\": 5}[\"foo\"]", 5),
+        ("{\"foo\": 5}[\"bar\"]", Null()),
+        ("{5: 5}[5]", 5),
+        ("{true: 5}[true]", 5),
+        ("{false: 5}[false]", 5),
+        ("{\"foo\": 5}[\"foo\"]", 5),
+        ("{\"foo\": 5}[\"bar\"]", Null()),
+        ("{5: 5}[5]", 5),
+        ("{true: 5}[true]", 5),
+        ("{false: 5}[false]", 5)
       )
 
       list.foreach { case (input, expected) =>
@@ -257,7 +288,8 @@ class EvaluatorTest extends FunSpec {
             |""".stripMargin,
           "unknown operator: BOOLEAN + BOOLEAN"
         ),
-        ("foobar", "identifier not found: foobar")
+        ("foobar", "identifier not found: foobar"),
+        ("{\"name\": \"Monkey\"}[fn(x) {x}]", "unusable as hash key: FUNCTION")
       )
 
       list.foreach { case (input, expected) =>
