@@ -9,6 +9,7 @@ import ast.{
   Expression,
   ExpressionStatement,
   FunctionLiteral,
+  HashLiteral,
   Identifier,
   IfExpression,
   IndexExpression,
@@ -92,6 +93,15 @@ object Evaluator {
               )
             )
         }
+      case HashLiteral(_, pairs) =>
+        val evaluated = pairs
+          .map { case (key, value) =>
+            val keyValue = eval(key, env)
+            val valueValue = eval(value, env)
+            (keyValue, valueValue)
+          }
+          .map { case (Some(key), Some(value)) => key -> value }
+        Some(Hash(evaluated))
       case _ => None
     }
   }

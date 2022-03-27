@@ -14,6 +14,7 @@ case object ERROR_OBJ extends ObjectType("ERROR")
 case object FUNCTION_OBJ extends ObjectType("FUNCTION")
 case object BUILTIN_OBJ extends ObjectType("BUILTIN")
 case object ARRAY_OBJ extends ObjectType("ARRAY")
+case object HASH_OBJ extends ObjectType("HASH")
 
 trait Object {
   val objectType: ObjectType
@@ -70,13 +71,8 @@ case class Builtin(fn: Seq[Object] => Option[Object]) extends Object {
   override def inspect: String = s"builtin function"
 }
 
-case class HashKey(private val key: Any) extends Object {
-  val value: Int = key.hashCode()
-  val objectType: ObjectType = key match {
-    case _: String  => STRING_OBJ
-    case _: Integer => INTEGER_OBJ
-    case _: Boolean => BOOLEAN_OBJ
-    case _          => ERROR_OBJ
-  }
-  override def inspect: String = key.toString
+case class Hash(pairs: Map[Object, Object]) extends Object {
+  val objectType: ObjectType = HASH_OBJ
+  override def inspect: String =
+    s"{${pairs.map { case (key, value) => s"${key.inspect}: ${value.inspect}" }.mkString(", ")}}"
 }

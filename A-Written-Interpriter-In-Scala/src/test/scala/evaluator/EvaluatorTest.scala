@@ -135,7 +135,6 @@ class EvaluatorTest extends FunSpec {
         }
       }
     }
-
     it("builtin function") {
       val list = Seq(
         ("len(\"\")", 0),
@@ -210,7 +209,32 @@ class EvaluatorTest extends FunSpec {
         }
       }
     }
-
+    it("hash literal test") {
+      val list = Seq(
+        ("{}", Map()),
+        (
+          "{\"one\": 10 - 9, \"two\": 1 + 1, \"thr\" + \"ee\": 6 /2 , 4 : 4, true: 5, false: 6}",
+          Map(
+            "one" -> "1",
+            "two" -> "2",
+            "three" -> "3",
+            "4" -> "4",
+            "true" -> "5",
+            "false" -> "6"
+          )
+        )
+      )
+      list.foreach { case (input, expected) =>
+        val evaluated = testEval(input)
+        evaluated match {
+          case Some(Hash(elements)) =>
+            elements.map { case (key, value) =>
+              key.inspect -> value.inspect
+            } mustEqual expected
+          case None => fail(s"invalid object. $input $evaluated")
+        }
+      }
+    }
     it("error handling") {
       val list = Seq(
         ("5 + true", "type mismatch: INTEGER + BOOLEAN"),
