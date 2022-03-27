@@ -116,15 +116,16 @@ object Builtins {
       }
     ),
     "puts" -> Builtin((args: Seq[Object]) =>
-      if (args.length != 1) {
+      if (args.isEmpty) {
         Some(
-          Error(s"puts: wrong number of arguments. got=${args.length}, want=1")
+          Error(s"puts: wrong number of arguments. got=${args.length}")
         )
-      } else
-        args.headOption.flatMap { arg =>
+      } else {
+        args.foreach { arg =>
           println(arg.inspect)
-          None
         }
+        None
+      }
     )
   )
 }
