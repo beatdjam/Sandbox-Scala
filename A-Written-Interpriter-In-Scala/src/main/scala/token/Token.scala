@@ -69,7 +69,7 @@ case object NOT_EQ extends TokenType("!=")
 
 // デリミタ
 case object COMMA extends TokenType(",")
-case object COLON extends TokenType(";")
+case object COLON extends TokenType(":")
 case object SEMICOLON extends TokenType(";")
 case object LPAREN extends TokenType("(")
 case object RPAREN extends TokenType(")")

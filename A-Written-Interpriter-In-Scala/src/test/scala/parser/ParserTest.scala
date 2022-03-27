@@ -6,6 +6,7 @@ import ast.{
   CallExpression,
   ExpressionStatement,
   FunctionLiteral,
+  HashLiteral,
   Identifier,
   IfExpression,
   IndexExpression,
@@ -396,6 +397,41 @@ class ParserTest extends FunSpec {
         program.getString mustEqual expected
       }
     }
+
+    it("hash literals") {
+      val list = Seq(
+        (
+          "{\"one\": 1,\"two\": 2, \"three\": 3, }",
+          Map("one" -> "1", "two" -> "2", "three" -> "3")
+        ),
+        ("{}", Map.empty),
+        ("{1: 1}", Map("1" -> "1")),
+        ("{true: 1}", Map("true" -> "1")),
+        (
+          "{\"one\": 0 + 1,\"two\": 10 - 8, \"three\": 15 / 5, }",
+          Map("one" -> "(0 + 1)", "two" -> "(10 - 8)", "three" -> "(15 / 5)")
+        )
+      )
+      list.foreach { case (input, expected) =>
+        val lexer = Lexer.from(input)
+        val parser = Parser.from(lexer)
+        val program = parser.parseProgram()
+        checkParserErrors(parser)
+
+        program.statements.length mustBe 1
+        program.statements.foreach {
+          case statement: Some[ExpressionStatement] =>
+            val expression =
+              statement.get.expression.get.asInstanceOf[HashLiteral]
+            expression.pairs.map { case (key, value) =>
+              key.getString -> value.getString
+            } mustEqual expected
+          case _ =>
+            fail("invalid statement")
+        }
+      }
+    }
+
   }
 
   describe("parse") {

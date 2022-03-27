@@ -63,7 +63,7 @@ case class IntegerLiteral(token: Token, value: Int) extends Expression {
 }
 
 case class StringLiteral(token: Token, value: String) extends Expression {
-  override def getString: String = s"\"$value\""
+  override def getString: String = s"$value"
 }
 
 case class ArrayLiteral(token: Token, elements: Seq[Expression])
@@ -72,7 +72,8 @@ case class ArrayLiteral(token: Token, elements: Seq[Expression])
     s"[${elements.map(_.getString).mkString(", ")}]"
 }
 
-case class IndexExpression(token: Token, left : Expression, index: Expression) extends Expression {
+case class IndexExpression(token: Token, left: Expression, index: Expression)
+    extends Expression {
   override def getString: String = s"(${left.getString}[${index.getString}])"
 }
 
@@ -113,7 +114,8 @@ case class FunctionLiteral(
     parameters: Seq[Identifier],
     body: BlockStatement
 ) extends Expression {
-  override def getString: String = s"${tokenLiteral()}(${parameters.map(_.value).mkString(", ")}) ${body.getString}"
+  override def getString: String =
+    s"${tokenLiteral()}(${parameters.map(_.value).mkString(", ")}) ${body.getString}"
 }
 
 case class CallExpression(
@@ -123,4 +125,10 @@ case class CallExpression(
 ) extends Expression {
   override def getString: String =
     s"${function.getString}(${arguments.map(_.getString).mkString(", ")})"
+}
+
+case class HashLiteral(token: Token, pairs: Map[Expression, Expression])
+    extends Expression {
+  override def getString: String =
+    s"{${pairs.map { case (k, v) => s"${k.getString}: ${v.getString}" }.mkString(", ")}}"
 }

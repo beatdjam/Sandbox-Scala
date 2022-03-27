@@ -8,6 +8,7 @@ import ast.{
   Expression,
   ExpressionStatement,
   FunctionLiteral,
+  HashLiteral,
   Identifier,
   IfExpression,
   IndexExpression,
@@ -26,6 +27,7 @@ import token.{
   ASSIGN,
   ASTERISK,
   BANG,
+  COLON,
   COMMA,
   ELSE,
   EOF,
@@ -186,16 +188,34 @@ case class Parser private (
 
     def parsePrefixExpression(): Option[Expression] = {
       val current = curToken
-      if (current.tokenType != LBRACKET) {
+      if (current.tokenType == LBRACKET) {
+        val expressions = parseExpressionList(RBRACKET)
+        Some(ArrayLiteral(current, expressions))
+      } else if (current.tokenType == LBRACE) {
+        val buf = ListBuffer.empty[(Option[Expression], Option[Expression])]
+        while (!peekTokenIs(RBRACE)) {
+          nextToken()
+          val key = parseExpression(Priority.LOWEST)
+          if (expectPeek(COLON)) {
+            nextToken()
+            val value = parseExpression(Priority.LOWEST)
+            if (peekTokenIs(RBRACE) || expectPeek(COMMA))
+              buf.addOne((key, value))
+          }
+        }
+        if (expectPeek(RBRACE)) {
+          val pairs = buf.map { case (Some(key), Some(value)) =>
+            key -> value
+          }.toMap
+          Some(HashLiteral(current, pairs))
+        } else None
+      } else {
         nextToken()
         parseExpression(Priority.PREFIX) match {
           case Some(right) =>
             Some(PrefixExpression(current, current.literal, right))
           case None => None
         }
-      } else {
-        val expressions = parseExpressionList(RBRACKET)
-        Some(ArrayLiteral(current, expressions))
       }
     }
 
@@ -294,14 +314,14 @@ case class Parser private (
     }
 
     val leftExp = curToken.tokenType match {
-      case IDENT                   => Some(parseIdentifier())
-      case INT                     => Some(parseIntegerLiteral())
-      case STRING                  => Some(parseStringLiteral())
-      case LPAREN                  => parseGroupedExpression()
-      case TRUE | FALSE            => Some(parseBooleanExpression())
-      case BANG | MINUS | LBRACKET => parsePrefixExpression()
-      case IF                      => parseIfExpression()
-      case FUNCTION                => parseFunctionLiteral()
+      case IDENT                            => Some(parseIdentifier())
+      case INT                              => Some(parseIntegerLiteral())
+      case STRING                           => Some(parseStringLiteral())
+      case LPAREN                           => parseGroupedExpression()
+      case TRUE | FALSE                     => Some(parseBooleanExpression())
+      case BANG | MINUS | LBRACKET | LBRACE => parsePrefixExpression()
+      case IF                               => parseIfExpression()
+      case FUNCTION                         => parseFunctionLiteral()
       case _ =>
         _errors.addOne(
           s"no prefix parse function for ${curToken.tokenType.token} found"
