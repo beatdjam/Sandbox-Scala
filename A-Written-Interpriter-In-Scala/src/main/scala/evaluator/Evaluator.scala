@@ -24,8 +24,6 @@ import ast.{
   StringLiteral
 }
 
-import scala.annotation.tailrec
-
 object Evaluator {
   private val TRUE = Bool(true)
   private val FALSE = Bool(false)
