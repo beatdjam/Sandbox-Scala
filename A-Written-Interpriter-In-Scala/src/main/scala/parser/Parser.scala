@@ -93,7 +93,7 @@ case class Parser private (
         val identifier = Identifier(curToken, curToken.literal)
         if (expectPeek(ASSIGN)) {
           nextToken()
-          val value = parseExpression(Priority.LOWEST)
+          val value = parseExpression(LOWEST)
           if (peekTokenIs(SEMICOLON)) nextToken()
           Some(LetStatement(statement, identifier, value))
         } else None
@@ -103,14 +103,14 @@ case class Parser private (
     def parseReturnStatement(): Option[ReturnStatement] = {
       val current = curToken
       nextToken()
-      val returnValue = parseExpression(Priority.LOWEST)
+      val returnValue = parseExpression()
       if (peekTokenIs(SEMICOLON)) nextToken()
       Some(ReturnStatement(current, returnValue))
     }
 
     def parseExpressionStatement(): Option[ExpressionStatement] = {
       val current = curToken
-      val expression = parseExpression(Priority.LOWEST)
+      val expression = parseExpression()
       if (peekTokenIs(token.SEMICOLON)) nextToken()
       Some(ExpressionStatement(current, expression))
     }
@@ -122,7 +122,7 @@ case class Parser private (
     }
   }
 
-  private def parseExpression(precedence: Int): Option[Expression] = {
+  private def parseExpression(precedence: Int = LOWEST): Option[Expression] = {
     val precedences: Map[TokenType, Int] = Map(
       EQ -> Priority.EQUALS,
       NOT_EQ -> Priority.EQUALS,
@@ -178,7 +178,7 @@ case class Parser private (
 
     def parseGroupedExpression(): Option[Expression] = {
       nextToken()
-      val exp = parseExpression(Priority.LOWEST)
+      val exp = parseExpression()
       if (expectPeek(token.RPAREN)) exp
       else None
     }
@@ -195,10 +195,10 @@ case class Parser private (
         val buf = ListBuffer.empty[(Option[Expression], Option[Expression])]
         while (!peekTokenIs(RBRACE)) {
           nextToken()
-          val key = parseExpression(Priority.LOWEST)
+          val key = parseExpression()
           if (expectPeek(COLON)) {
             nextToken()
-            val value = parseExpression(Priority.LOWEST)
+            val value = parseExpression()
             if (peekTokenIs(RBRACE) || expectPeek(COMMA))
               buf.addOne((key, value))
           }
@@ -225,7 +225,7 @@ case class Parser private (
       if (curToken.tokenType == LPAREN) Some(parseCallExpression(left))
       else if (curToken.tokenType == LBRACKET) {
         nextToken()
-        val index = parseExpression(LOWEST)
+        val index = parseExpression()
         if (expectPeek(RBRACKET)) index.map(IndexExpression(current, left, _))
         else None
       } else {
@@ -243,7 +243,7 @@ case class Parser private (
       else {
         val current = curToken
         nextToken()
-        val conditionOpt = parseExpression(Priority.LOWEST)
+        val conditionOpt = parseExpression()
         conditionOpt match {
           case None | Some(_) if !expectPeek(RPAREN) || !expectPeek(LBRACE) =>
             None
@@ -300,12 +300,12 @@ case class Parser private (
       } else {
         nextToken()
         val buf = ListBuffer.empty[Expression]
-        parseExpression(Priority.LOWEST).map(buf.addOne)
+        parseExpression().map(buf.addOne)
 
         while (peekTokenIs(COMMA)) {
           nextToken()
           nextToken()
-          parseExpression(Priority.LOWEST).map(buf.addOne)
+          parseExpression().map(buf.addOne)
         }
 
         if (expectPeek(endToken)) buf.toList

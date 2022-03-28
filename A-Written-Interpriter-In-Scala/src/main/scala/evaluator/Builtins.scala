@@ -98,7 +98,6 @@ object Builtins {
     ),
     "push" -> Builtin((args: Seq[Object]) =>
       if (args.length != 2) {
-        println(args)
         Some(
           Error(s"push: wrong number of arguments. got=${args.length}, want=2")
         )
@@ -117,13 +116,9 @@ object Builtins {
     ),
     "puts" -> Builtin((args: Seq[Object]) =>
       if (args.isEmpty) {
-        Some(
-          Error(s"puts: wrong number of arguments. got=${args.length}")
-        )
+        Some(Error(s"puts: wrong number of arguments. got=${args.length}"))
       } else {
-        args.foreach { arg =>
-          println(arg.inspect)
-        }
+        args.foreach(arg => println(arg.inspect))
         None
       }
     )

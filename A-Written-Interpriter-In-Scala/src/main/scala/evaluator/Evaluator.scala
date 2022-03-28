@@ -24,6 +24,8 @@ import ast.{
   StringLiteral
 }
 
+import scala.annotation.tailrec
+
 object Evaluator {
   private val TRUE = Bool(true)
   private val FALSE = Bool(false)
@@ -199,12 +201,8 @@ object Evaluator {
         )
     }
 
-    def evalBangOperatorExpression(right: Option[Object]) = right match {
-      case Some(TRUE)  => Some(FALSE)
-      case Some(FALSE) => Some(TRUE)
-      case Some(NULL)  => Some(TRUE)
-      case _           => Some(FALSE)
-    }
+    def evalBangOperatorExpression(right: Option[Object]) =
+      right.map(obj => nativeBoolToBool(!isTruthy(obj)))
 
     operator match {
       case "!" => evalBangOperatorExpression(right)
@@ -219,6 +217,13 @@ object Evaluator {
       left: Option[Object],
       right: Option[Object]
   ): Option[Object] = {
+    def unknownOperatorError = Some(
+      Error(
+        s"unknown operator: " +
+          s"${left.map(_.objectType).getOrElse("")} " +
+          s"$operator ${right.map(_.objectType).getOrElse("")}"
+      )
+    )
     def evalIntegerInfixExpression(
         operator: String,
         leftValue: Int,
@@ -230,14 +235,8 @@ object Evaluator {
       case "/" => Some(Integer(leftValue / rightValue))
       case "<" => Some(Bool(leftValue < rightValue))
       case ">" => Some(Bool(leftValue > rightValue))
-      case _ =>
-        Some(
-          Error(
-            s"unknown operator: ${left
-              .map(_.objectType)
-              .getOrElse("")} $operator ${right.map(_.objectType).getOrElse("")}"
-          )
-        )
+      case _   => unknownOperatorError
+
     }
     def evalStringInfixExpression(
         operator: String,
@@ -245,14 +244,7 @@ object Evaluator {
         rightValue: String
     ): Option[Object] = operator match {
       case "+" => Some(Str(leftValue + rightValue))
-      case _ =>
-        Some(
-          Error(
-            s"unknown operator: ${left
-              .map(_.objectType)
-              .getOrElse("")} $operator ${right.map(_.objectType).getOrElse("")}"
-          )
-        )
+      case _   => unknownOperatorError
     }
 
     (operator, left, right) match {
@@ -279,13 +271,7 @@ object Evaluator {
           )
         }
       case _ =>
-        Some(
-          Error(
-            s"unknown operator: ${left
-              .map(_.objectType)
-              .getOrElse("")} $operator ${right.map(_.objectType).getOrElse("")}"
-          )
-        )
+        unknownOperatorError
     }
   }
 
