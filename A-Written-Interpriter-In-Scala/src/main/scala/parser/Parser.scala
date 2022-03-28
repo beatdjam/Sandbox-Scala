@@ -204,8 +204,9 @@ case class Parser private (
           }
         }
         if (expectPeek(RBRACE)) {
-          val pairs = buf.map { case (Some(key), Some(value)) =>
-            key -> value
+          val pairs = buf.flatMap {
+            case (Some(key), Some(value)) => Some(key -> value)
+            case _                        => None
           }.toMap
           Some(HashLiteral(current, pairs))
         } else None
@@ -254,6 +255,7 @@ case class Parser private (
               if (expectPeek(LBRACE)) Some(parseBlockStatement()) else None
             } else None
             Some(IfExpression(current, condition, conSeq, alt))
+          case _ => None
         }
       }
     }

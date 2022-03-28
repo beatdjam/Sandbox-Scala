@@ -42,7 +42,7 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustEqual 1
         program.statements.foreach {
-          case statement: Some[LetStatement] =>
+          case statement: Option[LetStatement] =>
             statement.get.tokenLiteral() mustEqual "let"
             statement.get.name.value mustEqual identifier
             statement.get.value.get.tokenLiteral() mustEqual value
@@ -67,7 +67,7 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustEqual 1
         program.statements.foreach {
-          case statement: Some[ReturnStatement] =>
+          case statement @ Some(ReturnStatement(_, _)) =>
             statement.get.tokenLiteral() mustEqual expect
           case _ =>
             fail("invalid statement")
@@ -232,25 +232,27 @@ class ParserTest extends FunSpec {
         ("if (x < y) { x }", "(x < y)", "x", None),
         ("if (x < y) { x } else { y }", "(x < y)", "x", Some("y"))
       )
-      list.foreach { case (input, condition, consequence, alternative) =>
-        val lexer = Lexer.from(input)
-        val parser = Parser.from(lexer)
-        val program = parser.parseProgram()
-        checkParserErrors(parser)
-        program.statements.length mustBe 1
-        program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[IfExpression]
-
-            expression.condition.getString mustEqual condition
-            expression.consequence.statements.length mustEqual 1
-            expression.consequence.statements.head.get.getString mustEqual consequence
-            expression.alternative.map(_.getString) mustEqual alternative
-
-          case _ =>
-            fail("invalid statement")
-        }
+      list.foreach {
+        case (input, expectCondition, expectConsequence, expectAlternative) =>
+          val lexer = Lexer.from(input)
+          val parser = Parser.from(lexer)
+          val program = parser.parseProgram()
+          checkParserErrors(parser)
+          program.statements.length mustBe 1
+          program.statements.foreach {
+            case Some(
+                  ExpressionStatement(
+                    _,
+                    Some(IfExpression(_, condition, consequence, alternative))
+                  )
+                ) =>
+              condition.getString mustEqual expectCondition
+              consequence.statements.length mustEqual 1
+              consequence.statements.head.get.getString mustEqual expectConsequence
+              alternative.map(_.getString) mustEqual expectAlternative
+            case _ =>
+              fail("invalid statement")
+          }
       }
     }
 
@@ -261,7 +263,7 @@ class ParserTest extends FunSpec {
         ("fn(x) {};", Seq("x"), ""),
         ("fn(x, y, z) {};", Seq("x", "y", "z"), "")
       )
-      list.foreach { case (input, parameters, body) =>
+      list.foreach { case (input, expectParameters, expectBody) =>
         val lexer = Lexer.from(input)
         val parser = Parser.from(lexer)
         val program = parser.parseProgram()
@@ -269,13 +271,14 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustBe 1
         program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[FunctionLiteral]
-
-            expression.parameters.map(_.getString) mustEqual parameters
-            expression.body.getString mustEqual body
-
+          case Some(
+                ExpressionStatement(
+                  token,
+                  Some(FunctionLiteral(_, parameters, body))
+                )
+              ) =>
+            parameters.map(_.getString) mustEqual expectParameters
+            body.getString mustEqual expectBody
           case _ =>
             fail("invalid statement")
         }
@@ -294,12 +297,11 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustBe 1
         program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[ArrayLiteral]
-
-            expression.elements.size mustEqual len
-            expression.elements.map(_.getString) mustEqual values
+          case Some(
+                ExpressionStatement(_, Some(ArrayLiteral(_, elements)))
+              ) =>
+            elements.size mustEqual len
+            elements.map(_.getString) mustEqual values
 
           case _ =>
             fail("invalid statement")
@@ -309,18 +311,18 @@ class ParserTest extends FunSpec {
 
     it("index expressions") {
       val list = Seq(("myArray[1 + 1]", "myArray", "(1 + 1)"))
-      list.foreach { case (input, ident, index) =>
+      list.foreach { case (input, ident, key) =>
         val lexer = Lexer.from(input)
         val parser = Parser.from(lexer)
         val program = parser.parseProgram()
         checkParserErrors(parser)
 
         program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[IndexExpression]
-            expression.left.getString mustEqual ident
-            expression.index.getString mustEqual index
+          case Some(
+                ExpressionStatement(_, Some(IndexExpression(_, left, index)))
+              ) =>
+            left.getString mustEqual ident
+            index.getString mustEqual key
           case _ =>
             fail("invalid statement")
         }
@@ -339,12 +341,14 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustBe 1
         program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[CallExpression]
-            expression.function.tokenLiteral() mustEqual name
-            expression.arguments
-              .map(_.getString) mustEqual parameters
+          case Some(
+                ExpressionStatement(
+                  _,
+                  Some(CallExpression(_, function, arguments))
+                )
+              ) =>
+            function.tokenLiteral() mustEqual name
+            arguments.map(_.getString) mustEqual parameters
           case _ =>
             fail("invalid statement")
         }
@@ -420,10 +424,8 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustBe 1
         program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[HashLiteral]
-            expression.pairs.map { case (key, value) =>
+          case Some(ExpressionStatement(_, Some(HashLiteral(_, pairs)))) =>
+            pairs.map { case (key, value) =>
               key.getString -> value.getString
             } mustEqual expected
           case _ =>

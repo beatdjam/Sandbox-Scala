@@ -111,7 +111,10 @@ object Evaluator {
             val valueValue = eval(value, env)
             (keyValue, valueValue)
           }
-          .map { case (Some(key), Some(value)) => key -> value }
+          .flatMap {
+            case (Some(key), Some(value)) => Some(key -> value)
+            case _                        => None
+          }
         Some(Hash(evaluated))
       case _ => None
     }
