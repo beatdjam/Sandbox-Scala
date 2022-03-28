@@ -223,7 +223,7 @@ class EvaluatorTest extends FunSpec {
           case Some(Function(parameters, body, _)) =>
             parameters.map(_.getString) mustBe expectedParameter
             body.getString mustBe expectedBody
-          case None => fail(s"invalid object. $input $evaluated")
+          case None | _ => fail(s"invalid object. $input $evaluated")
         }
       }
     }
@@ -236,7 +236,7 @@ class EvaluatorTest extends FunSpec {
         evaluated match {
           case Some(Array(elements)) =>
             elements.map(_.inspect) mustEqual expected
-          case None => fail(s"invalid object. $input $evaluated")
+          case None | _ => fail(s"invalid object. $input $evaluated")
         }
       }
     }
@@ -262,7 +262,7 @@ class EvaluatorTest extends FunSpec {
             elements.map { case (key, value) =>
               key.inspect -> value.inspect
             } mustEqual expected
-          case None => fail(s"invalid object. $input $evaluated")
+          case None | _ => fail(s"invalid object. $input $evaluated")
         }
       }
     }

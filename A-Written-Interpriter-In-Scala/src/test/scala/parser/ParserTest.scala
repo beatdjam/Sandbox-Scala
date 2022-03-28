@@ -42,10 +42,10 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustEqual 1
         program.statements.foreach {
-          case statement: Option[LetStatement] =>
-            statement.get.tokenLiteral() mustEqual "let"
-            statement.get.name.value mustEqual identifier
-            statement.get.value.get.tokenLiteral() mustEqual value
+          case Some(exp: LetStatement) =>
+            exp.tokenLiteral() mustEqual "let"
+            exp.name.value mustEqual identifier
+            exp.value.get.tokenLiteral() mustEqual value
           case _ =>
             fail("invalid statement")
         }
@@ -90,11 +90,9 @@ class ParserTest extends FunSpec {
 
       program.statements.length mustEqual 1
       program.statements.foreach {
-        case statement: Some[ExpressionStatement] =>
-          statement.get.tokenLiteral() mustEqual "foobar"
-          val expression = statement.get.expression.get.asInstanceOf[Identifier]
-          expression.value mustEqual "foobar"
-          expression.tokenLiteral() mustEqual "foobar"
+        case Some(ExpressionStatement(_, Some(exp: Identifier))) =>
+          exp.value mustEqual "foobar"
+          exp.tokenLiteral() mustEqual "foobar"
         case _ =>
           fail("invalid statement")
       }
@@ -113,11 +111,9 @@ class ParserTest extends FunSpec {
 
       program.statements.length mustEqual 1
       program.statements.foreach {
-        case statement: Some[ExpressionStatement] =>
-          val expression =
-            statement.get.expression.get.asInstanceOf[IntegerLiteral]
-          expression.value mustEqual 5
-          expression.tokenLiteral() mustEqual "5"
+        case Some(ExpressionStatement(_, Some(exp: IntegerLiteral))) =>
+          exp.value mustEqual 5
+          exp.tokenLiteral() mustEqual "5"
         case _ =>
           fail("invalid statement")
       }
@@ -134,12 +130,10 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustEqual 1
         program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[PrefixExpression]
-            expression.operator mustEqual operator
+          case Some(ExpressionStatement(_, Some(exp: PrefixExpression))) =>
+            exp.operator mustEqual operator
 
-            val integerLiteral = expression.right.asInstanceOf[IntegerLiteral]
+            val integerLiteral = exp.right.asInstanceOf[IntegerLiteral]
             integerLiteral.value mustEqual integerValue
             integerLiteral.tokenLiteral() mustEqual integerValue.toString
           case _ =>
@@ -168,16 +162,14 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustEqual 1
         program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[InfixExpression]
-            expression.operator mustEqual operator
+          case Some(ExpressionStatement(_, Some(exp: InfixExpression))) =>
+            exp.operator mustEqual operator
 
-            val left = expression.left.asInstanceOf[IntegerLiteral]
+            val left = exp.left.asInstanceOf[IntegerLiteral]
             left.value mustEqual leftValue
             left.tokenLiteral() mustEqual leftValue.toString
 
-            val right = expression.right.asInstanceOf[IntegerLiteral]
+            val right = exp.right.asInstanceOf[IntegerLiteral]
             right.value mustEqual rightValue
             right.tokenLiteral() mustEqual rightValue.toString
           case _ =>
@@ -197,10 +189,8 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustEqual 1
         program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[BooleanExpression]
-            expression.value mustEqual boolean
+          case Some(ExpressionStatement(_, Some(exp: BooleanExpression))) =>
+            exp.value mustEqual boolean
           case _ =>
             fail("invalid statement")
         }
@@ -217,10 +207,8 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustEqual 1
         program.statements.foreach {
-          case statement: Some[ExpressionStatement] =>
-            val expression =
-              statement.get.expression.get.asInstanceOf[StringLiteral]
-            expression.value mustEqual string
+          case Some(ExpressionStatement(_, Some(exp: StringLiteral))) =>
+            exp.value mustEqual string
           case _ =>
             fail("invalid statement")
         }
@@ -240,16 +228,11 @@ class ParserTest extends FunSpec {
           checkParserErrors(parser)
           program.statements.length mustBe 1
           program.statements.foreach {
-            case Some(
-                  ExpressionStatement(
-                    _,
-                    Some(IfExpression(_, condition, consequence, alternative))
-                  )
-                ) =>
-              condition.getString mustEqual expectCondition
-              consequence.statements.length mustEqual 1
-              consequence.statements.head.get.getString mustEqual expectConsequence
-              alternative.map(_.getString) mustEqual expectAlternative
+            case Some(ExpressionStatement(_, Some(exp: IfExpression))) =>
+              exp.condition.getString mustEqual expectCondition
+              exp.consequence.statements.length mustEqual 1
+              exp.consequence.statements.head.get.getString mustEqual expectConsequence
+              exp.alternative.map(_.getString) mustEqual expectAlternative
             case _ =>
               fail("invalid statement")
           }
@@ -271,14 +254,9 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustBe 1
         program.statements.foreach {
-          case Some(
-                ExpressionStatement(
-                  token,
-                  Some(FunctionLiteral(_, parameters, body))
-                )
-              ) =>
-            parameters.map(_.getString) mustEqual expectParameters
-            body.getString mustEqual expectBody
+          case Some(ExpressionStatement(_, Some(exp: FunctionLiteral))) =>
+            exp.parameters.map(_.getString) mustEqual expectParameters
+            exp.body.getString mustEqual expectBody
           case _ =>
             fail("invalid statement")
         }
@@ -297,12 +275,9 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustBe 1
         program.statements.foreach {
-          case Some(
-                ExpressionStatement(_, Some(ArrayLiteral(_, elements)))
-              ) =>
-            elements.size mustEqual len
-            elements.map(_.getString) mustEqual values
-
+          case Some(ExpressionStatement(_, Some(exp: ArrayLiteral))) =>
+            exp.elements.size mustEqual len
+            exp.elements.map(_.getString) mustEqual values
           case _ =>
             fail("invalid statement")
         }
@@ -318,11 +293,9 @@ class ParserTest extends FunSpec {
         checkParserErrors(parser)
 
         program.statements.foreach {
-          case Some(
-                ExpressionStatement(_, Some(IndexExpression(_, left, index)))
-              ) =>
-            left.getString mustEqual ident
-            index.getString mustEqual key
+          case Some(ExpressionStatement(_, Some(exp: IndexExpression))) =>
+            exp.left.getString mustEqual ident
+            exp.index.getString mustEqual key
           case _ =>
             fail("invalid statement")
         }
@@ -341,14 +314,9 @@ class ParserTest extends FunSpec {
 
         program.statements.length mustBe 1
         program.statements.foreach {
-          case Some(
-                ExpressionStatement(
-                  _,
-                  Some(CallExpression(_, function, arguments))
-                )
-              ) =>
-            function.tokenLiteral() mustEqual name
-            arguments.map(_.getString) mustEqual parameters
+          case Some(ExpressionStatement(_, Some(exp: CallExpression))) =>
+            exp.function.tokenLiteral() mustEqual name
+            exp.arguments.map(_.getString) mustEqual parameters
           case _ =>
             fail("invalid statement")
         }

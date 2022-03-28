@@ -281,7 +281,7 @@ case class Parser private (
     // NOTE: 先読みしたtokenがinfixのとき、セミコロンか現在の優先度以下の演算子がくるまでループする
     def getInfixExpression(leftExp: Option[Expression]): Option[Expression] = {
       leftExp.flatMap { left =>
-        if (!peekTokenIs(token.SEMICOLON) && precedence < peekPrecedence) {
+        if (!peekTokenIs(token.SEMICOLON) && precedence < peekPrecedence()) {
           nextToken()
           val newLeft = parseInfixExpression(left)
           getInfixExpression(newLeft)
