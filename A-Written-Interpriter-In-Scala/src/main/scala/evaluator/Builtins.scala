@@ -15,7 +15,7 @@ object Builtins {
         case value @ _ =>
           val objectType =
             value.headOption.map(_.objectType).getOrElse("unknown")
-          getError(s"argument to push not supported, got $objectType")
+          getError(s"argument to len not supported, got $objectType")
       }
     ),
     "first" -> Builtin((args: Seq[Object]) =>
@@ -31,7 +31,7 @@ object Builtins {
         case value @ _ =>
           val objectType =
             value.headOption.map(_.objectType).getOrElse("unknown")
-          getError(s"argument to push not supported, got $objectType")
+          getError(s"argument to first not supported, got $objectType")
       }
     ),
     "last" -> Builtin((args: Seq[Object]) =>
@@ -49,7 +49,7 @@ object Builtins {
         case value @ _ =>
           val objectType =
             value.headOption.map(_.objectType).getOrElse("unknown")
-          getError(s"argument to push not supported, got $objectType")
+          getError(s"argument to last not supported, got $objectType")
       }
     ),
     "rest" -> Builtin((args: Seq[Object]) =>
@@ -66,7 +66,7 @@ object Builtins {
         case value @ _ =>
           val objectType =
             value.headOption.map(_.objectType).getOrElse("unknown")
-          getError(s"argument to push not supported, got $objectType")
+          getError(s"argument to rest not supported, got $objectType")
       }
     ),
     "push" -> Builtin((args: Seq[Object]) =>
