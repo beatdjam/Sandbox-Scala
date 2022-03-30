@@ -99,10 +99,10 @@ class EvaluatorTest extends FunSpec {
         ("len(\"\")", 0),
         ("len(\"four\")", 4),
         ("len(\"hello world\")", 11),
-        ("len(1)", "len: argument to len not supported, got INTEGER"),
+        ("len(1)", "argument to len not supported, got INTEGER"),
         (
           "len(\"one\",\"two\")",
-          "len: wrong number of arguments. got=2, want=1"
+          "wrong number of arguments. got=2, want=1"
         ),
         ("[1, 2, 3][0]", 1),
         ("[1, 2, 3][1]", 2),
@@ -171,10 +171,10 @@ class EvaluatorTest extends FunSpec {
         ("len(\"\")", 0),
         ("len(\"four\")", 4),
         ("len(\"hello world\")", 11),
-        ("len(1)", "len: argument to len not supported, got INTEGER"),
+        ("len(1)", "argument to len not supported, got INTEGER"),
         (
           "len(\"one\",\"two\")",
-          "len: wrong number of arguments. got=2, want=1"
+          "wrong number of arguments. got=2, want=1"
         ),
         ("len([1, 2, 3])", 3),
         ("len([])", 0),
