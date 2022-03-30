@@ -1,6 +1,7 @@
 package lexer
 
 import token.{EOF, EQ, ILLEGAL, INT, NOT_EQ, STRING, Token}
+import scala.collection.mutable.ListBuffer
 
 case class Lexer private (input: String) {
   private var readPosition: Int = 0
@@ -13,39 +14,70 @@ case class Lexer private (input: String) {
     if (readPosition + 1 < input.length) Some(input(readPosition + 1).toString)
     else None
 
-  def nextToken(): Token = {
-    skipWhiteSpace()
+  private var tokens = {
+    def getToken = {
+      def isString(ch: String): Boolean = !ch.contains("\"")
+      def isLetter(ch: String): Boolean = {
+        val list = ('a' to 'z') ++ ('A' to 'Z')
+        ch.forall(list.contains) || ch == "_"
+      }
+      def isDigit(ch: String): Boolean = {
+        val list = '0' to '9'
+        ch.forall(list.contains)
+      }
+      def read(fn: String => Boolean): String = {
+        val currentPosition = readPosition
+        while (ch.exists(fn)) readChar()
+        input.substring(currentPosition, readPosition)
+      }
 
-    ch.map {
-      case "=" if peekCh.contains("=") =>
-        readChar(2)
-        Token(EQ, "==")
-      case "!" if peekCh.contains("=") =>
-        readChar(2)
-        Token(NOT_EQ, "!=")
-      case ch @ ("=" | "+" | "-" | "!" | "/" | "*" | "<" | ">") =>
+      def isWhiteSpace = ch.exists(_ match {
+        case " " | "\n" | "\t" | "\r" => true
+        case _                        => false
+      })
+      while (isWhiteSpace) readChar()
+
+      ch.map {
+        case "=" if peekCh.contains("=") =>
+          readChar(2)
+          Token(EQ, "==")
+        case "!" if peekCh.contains("=") =>
+          readChar(2)
+          Token(NOT_EQ, "!=")
+        case ch @ ("=" | "+" | "-" | "!" | "/" | "*" | "<" | ">") =>
+          readChar()
+          Token.fromOperatorLiteral(ch)
+        case ch @ ("," | ":" | ";" | "(" | ")" | "{" | "}" | "[" | "]") =>
+          readChar()
+          Token.fromDelimiterLiteral(ch)
+        case "\"" =>
+          readChar()
+          val literal = read(isString)
+          readChar()
+          Token(STRING, literal)
+        case ch if isLetter(ch) =>
+          val literal = read(isLetter)
+          Token.fromLiteral(literal)
+        case ch if isDigit(ch) =>
+          val literal = read(isDigit)
+          Token(INT, literal)
+        case str =>
+          readChar()
+          Token(ILLEGAL, str)
+      }.getOrElse {
         readChar()
-        Token.fromOperatorLiteral(ch)
-      case ch @ ("," | ":" | ";" | "(" | ")" | "{" | "}" | "[" | "]") =>
-        readChar()
-        Token.fromDelimiterLiteral(ch)
-      case "\"" =>
-        readChar()
-        val literal = read(isString)
-        readChar()
-        Token(STRING, literal)
-      case ch if isLetter(ch) =>
-        val literal = read(isLetter)
-        Token.fromLiteral(literal)
-      case ch if isDigit(ch) =>
-        val literal = read(isDigit)
-        Token(INT, literal)
-      case str =>
-        readChar()
-        Token(ILLEGAL, str)
-    }.getOrElse {
-      readChar()
-      Token(EOF, "")
+        Token(EOF, "")
+      }
+    }
+    val buf = ListBuffer[Token]()
+    while (ch.isDefined) buf.addOne(getToken)
+    buf.toSeq
+  }
+
+  def nextToken(): Token = {
+    tokens match {
+      case head :: tail => tokens = tail; head;
+      case _            => Token(EOF, "")
     }
   }
 
@@ -53,31 +85,6 @@ case class Lexer private (input: String) {
     readPosition = readPosition + count
   }
 
-  private def skipWhiteSpace(): Unit = {
-    def isWhiteSpace = ch.exists(_ match {
-      case " " | "\n" | "\t" | "\r" => true
-      case _                        => false
-    })
-    while (isWhiteSpace) readChar()
-  }
-
-  private def isString(ch: String): Boolean = !ch.contains("\"")
-
-  private def isLetter(ch: String): Boolean = {
-    val list = ('a' to 'z') ++ ('A' to 'Z')
-    ch.forall(list.contains) || ch == "_"
-  }
-
-  private def isDigit(ch: String): Boolean = {
-    val list = '0' to '9'
-    ch.forall(list.contains)
-  }
-
-  private def read(fn: String => Boolean): String = {
-    val currentPosition = readPosition
-    while (ch.exists(fn)) readChar()
-    input.substring(currentPosition, readPosition)
-  }
 }
 
 object Lexer {
