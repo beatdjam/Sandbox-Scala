@@ -2,6 +2,8 @@ package lexer
 
 import token.{EOF, EQ, ILLEGAL, INT, NOT_EQ, STRING, Token}
 
+import scala.collection.mutable.ListBuffer
+
 case class Lexer private (private var input: String) {
   private def currentCh = input.headOption.map(_.toString)
   private def peekCh = if (input.length > 1) Some(input(1).toString) else None
@@ -62,7 +64,9 @@ case class Lexer private (private var input: String) {
         .getOrElse(Token(EOF, ""))
     }
 
-    input.map(_ => getToken)
+    val buf = ListBuffer[Token]()
+    while (currentCh.isDefined) buf += getToken
+    buf.toSeq
   }
 
   def nextToken(): Token = {
@@ -76,7 +80,6 @@ case class Lexer private (private var input: String) {
   private def readChar(count: Int = 1): Unit = {
     input = input.substring(count)
   }
-
 }
 
 object Lexer {
