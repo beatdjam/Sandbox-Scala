@@ -1,20 +1,12 @@
 package lexer
 
 import token.{EOF, EQ, ILLEGAL, INT, NOT_EQ, STRING, Token}
-import scala.collection.mutable.ListBuffer
 
-case class Lexer private (input: String) {
-  private var readPosition: Int = 0
+case class Lexer private (private var input: String) {
+  private def currentCh = input.headOption.map(_.toString)
+  private def peekCh = if (input.length > 1) Some(input(1).toString) else None
 
-  private def ch =
-    if (readPosition < input.length) Some(input(readPosition).toString)
-    else None
-
-  private def peekCh =
-    if (readPosition + 1 < input.length) Some(input(readPosition + 1).toString)
-    else None
-
-  private var tokens = {
+  private var tokens: Seq[Token] = {
     def getToken = {
       def isString(ch: String): Boolean = !ch.contains("\"")
       def isLetter(ch: String): Boolean = {
@@ -25,64 +17,64 @@ case class Lexer private (input: String) {
         val list = '0' to '9'
         ch.forall(list.contains)
       }
-      def read(fn: String => Boolean): String = {
-        val currentPosition = readPosition
-        while (ch.exists(fn)) readChar()
-        input.substring(currentPosition, readPosition)
-      }
-
-      def isWhiteSpace = ch.exists(_ match {
-        case " " | "\n" | "\t" | "\r" => true
+      def isWhiteSpace(ch: String) = ch.exists {
+        case ' ' | '\n' | '\t' | '\r' => true
         case _                        => false
-      })
-      while (isWhiteSpace) readChar()
-
-      ch.map {
-        case "=" if peekCh.contains("=") =>
-          readChar(2)
-          Token(EQ, "==")
-        case "!" if peekCh.contains("=") =>
-          readChar(2)
-          Token(NOT_EQ, "!=")
-        case ch @ ("=" | "+" | "-" | "!" | "/" | "*" | "<" | ">") =>
-          readChar()
-          Token.fromOperatorLiteral(ch)
-        case ch @ ("," | ":" | ";" | "(" | ")" | "{" | "}" | "[" | "]") =>
-          readChar()
-          Token.fromDelimiterLiteral(ch)
-        case "\"" =>
-          readChar()
-          val literal = read(isString)
-          readChar()
-          Token(STRING, literal)
-        case ch if isLetter(ch) =>
-          val literal = read(isLetter)
-          Token.fromLiteral(literal)
-        case ch if isDigit(ch) =>
-          val literal = read(isDigit)
-          Token(INT, literal)
-        case str =>
-          readChar()
-          Token(ILLEGAL, str)
-      }.getOrElse {
-        readChar()
-        Token(EOF, "")
       }
+
+      def read(fn: String => Boolean): String = {
+        val result = input.takeWhile(s => fn(s.toString)).mkString
+        readChar(result.length)
+        result
+      }
+
+      read(isWhiteSpace)
+
+      currentCh
+        .map {
+          case "=" if peekCh.contains("=") =>
+            readChar(2)
+            Token(EQ, "==")
+          case "!" if peekCh.contains("=") =>
+            readChar(2)
+            Token(NOT_EQ, "!=")
+          case ch @ ("=" | "+" | "-" | "!" | "/" | "*" | "<" | ">") =>
+            readChar()
+            Token.fromOperatorLiteral(ch)
+          case ch @ ("," | ":" | ";" | "(" | ")" | "{" | "}" | "[" | "]") =>
+            readChar()
+            Token.fromDelimiterLiteral(ch)
+          case "\"" =>
+            readChar()
+            val literal = read(isString)
+            readChar()
+            Token(STRING, literal)
+          case ch if isLetter(ch) =>
+            val literal = read(isLetter)
+            Token.fromLiteral(literal)
+          case ch if isDigit(ch) =>
+            val literal = read(isDigit)
+            Token(INT, literal)
+          case str =>
+            readChar()
+            Token(ILLEGAL, str)
+        }
+        .getOrElse(Token(EOF, ""))
     }
-    val buf = ListBuffer[Token]()
-    while (ch.isDefined) buf.addOne(getToken)
-    buf.toSeq
+
+    input.map(_ => getToken)
   }
 
   def nextToken(): Token = {
-    tokens match {
-      case head :: tail => tokens = tail; head;
+    val result = tokens match {
+      case head +: tail => tokens = tail; head;
       case _            => Token(EOF, "")
     }
+    result
   }
 
   private def readChar(count: Int = 1): Unit = {
-    readPosition = readPosition + count
+    input = input.substring(count)
   }
 
 }
