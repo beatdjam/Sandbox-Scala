@@ -1,17 +1,34 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 option java_multiple_files = true;
 option java_package = "example.myapp.helloworld.grpc";
 option java_outer_classname = "HelloWorldProto";
 
 package helloworld;
 
-// The greeting service definition.
+////////////////////////////////////// The greeting service definition.
 service GreeterService {
-  // Sends a greeting
+  //////////////////////
+  // Sends a greeting //
+  ////////*****/////////
+  //      HELLO       //
+  ////////*****/////////
   rpc SayHello (HelloRequest) returns (HelloReply) {}
+
+  // Comment spanning
+  // on several lines
   rpc ItKeepsTalking (stream HelloRequest) returns (HelloReply) {}
+
+  /*
+   * C style comments
+   */
   rpc ItKeepsReplying (HelloRequest) returns (stream HelloReply) {}
+
+  /* C style comments
+   * on several lines
+   * with non-empty heading/trailing line */
   rpc StreamHellos (stream HelloRequest) returns (stream HelloReply) {}
 }
 
@@ -23,4 +40,5 @@ message HelloRequest {
 // The response message containing the greetings
 message HelloReply {
   string message = 1;
+  google.protobuf.Timestamp timestamp = 2;
 }
